@@ -210,7 +210,7 @@ Before Step 1, no runtime suite exists: record the baseline as **not yet created
 - **Problem:** A coordinator needs one durable place to register work, checkpoints, observations and cautions without exposing private evidence.
 - **Type:** code
 - **Status:** TODO
-- **Issue:**
+- **Issue:** #1
 - **Flags:** --reviewers deep --isolation worktree
 - **Files:** `pyproject.toml`; `uv.lock`; `src/agent_advocate/__init__.py`; `src/agent_advocate/cli.py`; `src/agent_advocate/store.py`; `src/agent_advocate/service.py`; `tests/test_store.py`; `tests/test_cli.py`; `tests/test_privacy.py`; `README.md`; `CLAUDE.md`; `plan.md` (status/evidence only).
 - **Produces:** installable console entry point; schema version 1; run/checkpoint/observation/pattern/brief/status/finish commands; private store initialization; focused tests; runnable quickstart. `init` handles an absent seed file before Step 2 as an empty initial pattern set.
@@ -222,7 +222,7 @@ Before Step 1, no runtime suite exists: record the baseline as **not yet created
 - **Problem:** Persisted records need actual host-invoked advocacy, research and closeout workflows.
 - **Type:** code
 - **Status:** TODO
-- **Issue:**
+- **Issue:** #2
 - **Flags:** --reviewers code --isolation worktree
 - **Files:** `.agents/skills/assign-advocate/SKILL.md`; `.agents/skills/status-inquisition/SKILL.md`; `.agents/skills/coordination-cowbell/SKILL.md`; `.agents/skills/model-mother/SKILL.md`; `.agents/skills/advocate-wrap/SKILL.md`; `documentation/skill-contract.md`; `data/seed-patterns.json`; `data/model-families.json`; `src/agent_advocate/service.py`; `src/agent_advocate/cli.py`; `tests/test_patterns.py`; `tests/test_skill_resources.py`; `README.md`; `plan.md` (status/evidence only).
 - **Produces:** five concise discoverable packages using the same CLI and shared contract; sourced public cautions; stock model families; deterministic brief retrieval and pattern dispositions; public synthetic input examples in the shared contract.
@@ -234,7 +234,7 @@ Before Step 1, no runtime suite exists: record the baseline as **not yet created
 - **Problem:** A user needs an unattended timer that notices overdue expectations without turning every poll into a model call or repeated alarm.
 - **Type:** code
 - **Status:** TODO
-- **Issue:**
+- **Issue:** #3
 - **Flags:** --reviewers deep --isolation worktree
 - **Files:** `src/agent_advocate/watch.py`; `src/agent_advocate/cli.py`; `src/agent_advocate/service.py`; `src/agent_advocate/store.py`; `tests/test_watch.py`; `tests/test_watch_process.py`; `documentation/acceptance.md`; `README.md`; `CLAUDE.md`; `plan.md` (status/evidence only).
 - **Produces:** default-60-second foreground watcher, persistent/deduplicated alert notifications, acknowledgment/dismissal/snooze and pause/resume behavior; short real subprocess smoke; exact live-host acceptance recipe with all example request files authored before M1.
@@ -248,7 +248,7 @@ Before Step 1, no runtime suite exists: record the baseline as **not yet created
 - **Problem:** Mechanical tests cannot prove native skill discovery, actual independent assessment, live research, and visible watcher behavior.
 - **Type:** operator
 - **Status:** TODO
-- **Issue:**
+- **Issue:** #4
 - **Files:** `documentation/acceptance.md` (read-only procedure), `plan.md` (acceptance status only).
 - **Produces:** observed verdict, sanitized result summary and private evidence references only; no source/config/runbook authorship.
 - **Done when:** follow the already-authored procedure in a fresh Codex session: discover all five skills; assign advocacy to a real bounded task and obtain an actual independent assessment; persist a checkpoint and retrieve it in a fresh invocation; research at least one exact named model through a real public source and persist a scoped caution; observe the real watchdog across two default poll intervals and one short overdue case; invoke cowbell to diagnose/dispose the alert; wrap with a real outcome and retrieve its relevant pattern later. Missing agent/web capabilities or unobserved skill execution make acceptance incomplete. Record mechanisms demonstrated separately from any unproven long-term productivity benefit. No live profile or monitored-project change is necessary.

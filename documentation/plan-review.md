@@ -4,6 +4,8 @@ The conventions check in §19 and step-sizing check in §21 still apply. Review 
 
 Reviewed plan SHA256: `44A0FEB103F1011C7F3C129AA3F6CD261B7137804F6BE829D901AEE3F98C56F2`.
 
+Publication bookkeeping: the four Issue fields were subsequently filled with #1–#4. The initial blank-Issue reminder below is resolved; no design or acceptance text changed.
+
 Verdict: **PASS**. Open findings: 0 blockers, 0 significant gaps, 0 missing items, 1 reminder. The author corrected the six initial findings; the affected contracts and new changes were rechecked. This verdict concerns planning readiness, not product acceptance.
 
 ## Blockers

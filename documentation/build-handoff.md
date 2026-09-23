@@ -2,6 +2,8 @@
 
 The operator approved this v0 and public repository on 2026-09-22. Scope is settled in [plan.md](../plan.md); build it without reopening routine stack, privacy, timer or host choices. This document starts the build; it does not claim implementation is complete.
 
+Build issues: [Step 1 — persistence](https://github.com/aberson/agent-advocate/issues/1), [Step 2 — skills](https://github.com/aberson/agent-advocate/issues/2), [Step 3 — watchdog](https://github.com/aberson/agent-advocate/issues/3). Separate live acceptance: [M1](https://github.com/aberson/agent-advocate/issues/4).
+
 ## Start in this repository
 
 Verify the checkout identity and current state before acting:

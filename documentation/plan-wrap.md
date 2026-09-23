@@ -6,6 +6,8 @@ Mode: `--no-autofix`. Reviewed document: `plan.md`. All three code steps and the
 
 Reviewed plan SHA256: `44A0FEB103F1011C7F3C129AA3F6CD261B7137804F6BE829D901AEE3F98C56F2`.
 
+Publication bookkeeping: the four Issue fields were subsequently filled with #1–#4. The pre-sync blank fields noted below are resolved; no design or acceptance text changed.
+
 The review follows the technical plan review and the rendered proposal. It does not certify implementation, host capability, test results, or live acceptance. No plan autofix was applied.
 
 ## Checklist
