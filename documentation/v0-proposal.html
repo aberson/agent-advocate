@@ -14,18 +14,19 @@
 </head>
 <body><main>
 <header>
-<div class="eyebrow">Approved scope · Publication 1 · 2026-09-23 UTC</div>
+<div class="eyebrow">Approved scope · Publication 2 · 2026-09-23 UTC</div>
 <h1>Agent Advocate</h1>
 <p class="lead">An evidence-based second view that helps a coding coordinator notice delivery problems, choose a useful response, and retain the lessons that still matter.</p>
-<p class="meta">v0: five skills, a private SQLite store, and a simple timer. Planning complete; implementation remains to be built.</p>
+<p class="meta">v0: five skills, a private SQLite store, and a simple timer. Step 1 has a preserved unmerged candidate; required-review readiness comes first.</p>
 </header>
 <section aria-labelledby="heard"><h2 id="heard">What I heard</h2>
 <p>Builds can spend too long expanding scope, repeating checks, or cycling through reviews. The coordinator needs timely evidence and informed advice before work, at normal checkpoints, and after the outcome is known.</p>
 <p>The approved direction is to build a useful v0 quickly, use it during selected v1 work, and then resume the separately approved Skill Mesh improvements. Existing useful work supplies the live example; no benchmark project is required.</p>
+<p>The September 23 correction puts the recurring review-capability failure first. Repair the shared adapter in its owning project; teach Agent Advocate to detect unsupported gates, missing helpers and capacity mismatches before recommending a build.</p>
 </section>
 <section aria-labelledby="shape"><h2 id="shape">Why this shape</h2>
 <div class="grid">
-<article class="card"><h3>Before work</h3><p><code>assign-advocate</code> captures observable acceptance and time expectations, retrieves relevant cautions, and obtains an actual independent assessment.</p></article>
+<article class="card"><h3>Before work</h3><p><code>assign-advocate</code> checks required review capability against loaded adapters, packaged helpers and actual host tools. It records available, unavailable or unknown with evidence, then obtains an independent assessment when possible.</p></article>
 <article class="card"><h3>At checkpoints</h3><p><code>status-inquisition</code> checks progress neutrally. <code>coordination-cowbell</code> investigates a suspected problem. A missed expectation signals overdue visibility, not proof of failure.</p></article>
 <article class="card"><h3>After work</h3><p><code>advocate-wrap</code> records the outcome, identifies the owning component, and retires obsolete cautions. <code>model-mother</code> deliberately refreshes dated, scoped model guidance.</p></article>
 </div>
@@ -33,12 +34,13 @@
 </section>
 <section aria-labelledby="timeline"><h2 id="timeline">Build timeline</h2>
 <ol class="timeline">
+<li class="card"><h3>First · Repair the shared review prerequisite</h3><p>Existing Skill Mesh Phase CD adds conditional Codex dispatch, the missing code-lane resources, and capacity-limited batches of six fresh independent reviewers. Qualify the generated install and refresh the actual profile before relying on it.</p><small>This is an owning-component repair, not another Agent Advocate code step. Preserve the existing Step 1 candidate, findings and retry history.</small></li>
 <li class="card"><h3>Step 1 · Durable run and evidence</h3><p>Build the Python CLI and SQLite lifecycle. Prove persistence with fresh processes, retry identity, bounded concurrent writes, and the external private-store boundary.</p><small>Produces a usable local utility. Deep review targets the persistent schema.</small></li>
 <li class="card"><h3>Step 2 · Five working skill packages</h3><p>Add project-local Codex packages, shared instructions, public-source cautions, and relevant-pattern retrieval. Prove package structure and helper behavior; native execution is observed in M1.</p><small>Uses ordinary code review. No Skill Mesh installation is a dependency.</small></li>
 <li class="card"><h3>Step 3 · Timer and alerts</h3><p>Add the foreground watchdog, persistent deduplication, snooze/acknowledgment, pause/resume, and an exact acceptance runbook. Prove the watcher/store boundary using a short real process test.</p><small>Deep review targets timer/persistence behavior. No long soak is required.</small></li>
 <li class="card"><h3>M1 · Live acceptance</h3><p>In a fresh Codex session, observe all five skills, actual independent assessment and web research, persisted observations, and the watcher across two normal intervals plus a short overdue case.</p><small>Observed product behavior qualifies v0; long-term productivity benefit remains unproven.</small></li>
 </ol>
-<div class="after"><h3>Afterwards</h3><p>Start the build from this repository with <code>/build-phase --plan plan.md --steps 1,2,3</code>. After those code steps, run the prepared M1 procedure. The build handoff contains the full context and stop point.</p><p>Once implemented: <code>uv sync --locked</code>, then <code>uv run --locked agent-advocate init</code>. Invoke <code>$assign-advocate</code> in Codex and use its returned run UUID with <code>agent-advocate watch</code>.</p></div>
+<div class="after"><h3>Afterwards</h3><p>Once the required route is qualified and build ownership reconciled, resume here with <code>/build-phase --plan plan.md --steps 1,2,3 --resume 1</code>. After the code steps, run M1. The handoff preserves the prior candidate and does not reset repair rounds.</p><p>Once implemented: <code>uv sync --locked</code>, then <code>uv run --locked agent-advocate init</code>. Invoke <code>$assign-advocate</code> in Codex and use its returned run UUID with <code>agent-advocate watch</code>.</p></div>
 </section>
 <section aria-labelledby="operator"><h2 id="operator">Operator choices</h2>
 <table><thead><tr><th>ID</th><th>Approved choice</th></tr></thead><tbody>
@@ -49,6 +51,7 @@
 <tr id="P5"><td>P5</td><td>v0, then selected v1 work using the advocate, then Skill Mesh work.</td></tr>
 <tr id="P6"><td>P6</td><td>Public repository; runtime data may remain private.</td></tr>
 <tr id="P7"><td>P7</td><td>Previously accepted workflow/effort remedies remain future Skill Mesh work.</td></tr>
+<tr id="P8"><td>P8</td><td>Address recurring required-review unavailability first, then continue; a narrow prerequisite exception to P5/P7.</td></tr>
 </tbody></table>
 </section>
 <section aria-labelledby="defaults"><h2 id="defaults">Agent defaults</h2>
@@ -60,6 +63,7 @@
 <article class="card" id="D4"><span class="tag">D4 · Delivery</span><h3>Three code slices and one observation</h3><p><strong>What:</strong> Persistence, skills, watchdog, then M1.</p><p><strong>Why:</strong> Each slice has concrete acceptance; live host behavior is observed separately.</p><p><strong>Tweak:</strong> Split only if implementation exposes a real dependency or scope problem.</p></article>
 <article class="card" id="D5"><span class="tag">D5 · Monitoring</span><h3>Explicit checkpoints</h3><p><strong>What:</strong> Skills submit progress; the timer raises deterministic advisory alerts.</p><p><strong>Why:</strong> Avoid guessing activity from transcripts or paying for a model every poll.</p><p><strong>Tweak:</strong> Add automatic diagnostic dispatch only after useful real evidence supports it.</p></article>
 <article class="card" id="D6"><span class="tag">D6 · Context</span><h3>Five relevant cautions at most</h3><p><strong>What:</strong> Retrieve applicable active patterns, retaining hypothesis labels.</p><p><strong>Why:</strong> Historical advice should not overwhelm the actual task.</p><p><strong>Tweak:</strong> Adjust the retrieval limit and ranking after observed use.</p></article>
+<article class="card" id="D7"><span class="tag">D7 · Ownership</span><h3>Repair once; detect early</h3><p><strong>What:</strong> Repair Skill Mesh's shared engine through its existing Phase CD plan. Agent Advocate records readiness using its existing Observation fields.</p><p><strong>Why:</strong> A second review engine or another capability database would duplicate the problem's owner.</p><p><strong>Tweak:</strong> Extend the same preflight evidence to other required gates after real incidents.</p></article>
 </div>
 </section>
 <section aria-labelledby="deferred"><h2 id="deferred">Deferred beyond v0</h2>

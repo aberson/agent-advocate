@@ -4,9 +4,9 @@
 
 **Objective:** help a coding coordinator finish useful work by surfacing evidenced delivery problems before work, at normal checkpoints, and after work, with a simple timer that makes overdue expectations visible.
 
-**Status:** APPROVED SCOPE; planning/public repository setup only. Every implementation step is TODO. The operator approved the five-skill v0, SQLite, a configurable 60-second timer, Codex first, and skill-invoked model diagnosis on 2026-09-22 (operator local date). Public publication and private runtime storage were authorized on the same date. No additional scope approval is needed to execute this plan.
+**Status:** APPROVED SCOPE; Step 1 is blocked with an unmerged implementation preserved, and Steps 2/3/M1 remain TODO. On 2026-09-23 the operator requested that recurring review-capability failures be addressed first, then work continue. The five-skill v0, SQLite, configurable 60-second timer, Codex first, public repository and private runtime storage were approved on 2026-09-22. No repeated approval of those defaults is needed.
 
-**Release sequence:** finish this v0; use it during selected v1 work; then resume the separately approved Skill Mesh improvements. Agent Advocate has no runtime or build prerequisite on Skill Mesh, Switchboard, or an observatory. A larger future framework is acceptable when real use justifies its cost; no broad v1 build is authorized by this v0 plan.
+**Release sequence:** repair the selected build workflow's review prerequisite, resume the preserved v0 work, use v0 during selected v1 work, then resume the broader separately approved Skill Mesh improvements. Agent Advocate's product has no runtime dependency on Skill Mesh, Switchboard, or an observatory. The current workspace's chosen Codex build workflow needs the specific shared review repair described in section 11; other qualified build workflows need not depend on Skill Mesh. No broad v1 build or unrelated Skill Mesh work is authorized by this v0 plan.
 
 Proposal: [documentation/v0-proposal.html](documentation/v0-proposal.html)
 
@@ -71,9 +71,9 @@ For a corrupt or unsupported store, stop its watchers/writers, preserve the enti
 
 | Skill | Trigger and required behavior | Persisted result |
 |---|---|---|
-| `assign-advocate` | Start/resume advocacy for explicitly named work. Register/reuse a run, capture observable acceptance and exclusions, expected checkpoint/deadline, model roles and relevant cautions. Obtain one fresh independent read-only assessment using actual host capability and primary plan/evidence, not just coordinator narration. | Run + observation with actual analysis provenance; visible unavailable result if independence is unavailable |
+| `assign-advocate` | Start/resume advocacy for explicitly named work. Register/reuse a run, capture acceptance, exclusions, time expectations, models and relevant cautions. Before recommending build dispatch, check the required review route against the loaded adapters, packaged helpers and actual host capabilities. Obtain one fresh independent read-only assessment using actual host capability and primary plan/evidence, not just coordinator narration. | Run + capability observation + actual analysis provenance; visible unavailable/unknown result and owning repair when requirements cannot be met |
 | `status-inquisition` | Routine checkpoint/status request. Compare claimed progress with actual receipts and current acceptance; distinguish completed work, checks, waiting, uncertainty and next action. Inspect supporting files only as needed. | Checkpoint + bounded assessment; can raise a cowbell if evidence warrants |
-| `coordination-cowbell` | User escalation or watchdog alert. Investigate the named condition, plausible workflow/model/environment causes, and an actionable next move. An overdue expectation is a reason to investigate, not proof of defective work. | Evidence-backed observation and alert disposition; no automatic build stop, rollback, gate override or scope expansion |
+| `coordination-cowbell` | User escalation, watchdog alert, or repeated failure of a required review route. Investigate the named condition and actionable next move; distinguish unsupported adapter, missing resource, capacity mismatch, service failure and actual code defect. An overdue expectation is a reason to investigate, not proof of defective work. | Evidence-backed observation and alert disposition when an alert exists; no automatic build stop, rollback, gate override or scope expansion |
 | `model-mother` | Explicit research request or explicit model-list refresh. Read exact supplied model roles or the stock list, use host web tools, prefer current official sources, and preserve dates, versions, scope and uncertainty. Community reports remain candidates. | Scoped private pattern updates and a concise change report; no automatic routing/settings changes |
 | `advocate-wrap` | Completed, stopped, or abandoned work. Reconcile observed problems and advice; classify new rule gap, existing rule missed, rule conflict/obsolete rule, environmental failure, task-specific correction, or unsupported hypothesis. Identify owner and dispositions; distinguish fix applied from later benefit. | Run outcome + observations/pattern dispositions; carry useful cautions and retire superseded ones |
 
@@ -83,7 +83,17 @@ Independent assessment is implemented in the skill through native host tools, no
 
 Each skill reads only the short shared contract and records relevant to its run. `brief` retrieves at most five applicable patterns, excluding retired and dismissed patterns, prioritizing exact model/role matches and confirmed local observations, then updated time and key for deterministic ties. Scope dimensions combine with AND, values within a dimension with OR; an empty dimension matches any run, a nonempty dimension without matching known run data does not match. Runs have no tag field in v0, so nonempty tag scopes cannot match. Candidates remain labeled; never load every historical caution. The stock list names Astra, Terra, Sol, Fable and Opus as user-editable family labels, not resolved version claims. Requested exact model IDs from a real run take precedence for research.
 
-Seed five generalized workflow cautions: repeated validation; review churn without new evidence; scope growth beyond acceptance; environment/resource failure mistaken for code failure; and high-effort behavior requiring model-specific assessment. Seed only public-source guidance or explicitly labeled hypotheses. Do not copy private historical build facts into the public seeds.
+Seed six generalized workflow cautions: repeated validation; review churn without new evidence; scope growth beyond acceptance; environment/resource failure mistaken for code failure; high-effort behavior requiring model-specific assessment; and `required-review-unavailable` (a required gate does not have a usable route on the selected host). Seed only public-source guidance or explicitly labeled hypotheses. Do not copy private historical build facts into the public seeds.
+
+### Before-work capability check
+
+This is part of `assign-advocate`, not another skill, database table, certification service or automatic router. Read the named step's required gates and the actual installed skill adapter; check its referenced executable resources and the active host's callable capabilities. A model label, successful source test, or the existence of SKILL.md alone is not proof that the required review can run.
+
+Report each required route as **available**, **unavailable**, or **unknown**, with the observed reason, evidence and owning component. Use the existing Observation fields: `statement` contains the route/status/reason/owner, `basis` distinguishes direct inspection from reported claims, `evidence` cites the adapter/resource/probe receipt, `pattern_key` is `required-review-unavailable`, and `recommendation` names the next action. No schema change or generic capability registry is required. Public examples are synthetic; actual host/session paths and results remain private.
+
+For a required independent review, check fresh-context dispatch, model/role availability where observable, parent-only verdict authority when required by that workflow, required helper availability, and a scheduling contract compatible with the host's agent capacity. Capacity-limited batching is valid only if the owning review contract allows it and every required lens remains a distinct fresh reviewer. An explicit adapter refusal is **unavailable** even if the host has a spawn tool. An unperformed/inconclusive required probe is **unknown**, never available. Optional lint-tool absence remains the review contract's warning/skip; it must not be mistaken for a missing whole review gate.
+
+Reuse a valid current-session capability receipt while the host, loaded adapter/resources and required route are unchanged. Recheck only changed prerequisites or a new session. Do not launch a full review, rerun the project suite, poll model services continuously, or repeat a failed dispatch to establish readiness. Give the coordinator the owning repair or explicitly authorized working route; the advocate neither silently downgrades a gate nor grants new host/model authority. At wrap, mark a correction fix-applied until a subsequent real invocation demonstrates it works.
 
 ### State and expectations
 
@@ -199,6 +209,14 @@ Open that watcher in a terminal you can see. Ctrl+C stops monitoring without sto
 
 ## 11. Development Process
 
+### First: resolve the required review route
+
+The selected Codex workflow's installed `review-deep` adapter currently returns `required_tool_missing` unconditionally. Its shared repair belongs to [Skill Mesh Phase CD](https://github.com/aberson/skill-mesh/blob/main/documentation/codex-deep-review-unblock-plan.md), existing implementation [#222](https://github.com/aberson/skill-mesh/issues/222) and installed qualification [#223](https://github.com/aberson/skill-mesh/issues/223). The September 23 amendment covers conditional host mapping, the missing packaged code-lane helpers, six independent reviewers scheduled within available slots, and normal installed-profile refresh after proof. This project owns early detection and actionable tracking of that problem, not a fork of the shared review engine.
+
+Before resuming this build, use the above capability check manually from this plan (the product skills are still unbuilt). Keep Steps 1/3 on `--reviewers deep`. Qualify and load the corrected Codex route before dispatch; do not infer success from source edits or a disposable install alone. A separately authorized, demonstrably working Claude route remains distinct and does not qualify Codex. This narrow repair is the exception to the prior decision to defer broader Skill Mesh improvements.
+
+Reconcile Git, issue #1, the existing Step 1 worktree and its latest review receipts before any restart. Work exists beyond the earlier "build did not start" report: later Claude/Opus reviews and repair passes are preserved. Preserve the implementation, unresolved findings, current owner and consumed retry rounds. Resume that candidate; do not create another Step 1 implementation, reset its budget, or overwrite an active builder. Record incomplete prerequisites honestly and stop only the dependent dispatch while unrelated authorized work can continue.
+
 The public repository is prepared through plan-review, plan-redline, plan-wrap and repo-init. The build handoff then runs the three code steps in order in isolated worktrees. Stakes-aware routing uses `--reviewers deep` for Step 1's persistent schema and Step 3's timer/store producer-consumer boundary; Step 2 uses `--reviewers code`. These are bounded reviews of the named step, not a Skill Mesh-wide review or a model-tier escalation. GitHub issues are derived from these steps; repository identity is checked before mutations.
 
 Before Step 1, no runtime suite exists: record the baseline as **not yet created**, never as zero passing tests. Step 1 creates the smallest meaningful suite. Thereafter `uv run --locked python -m pytest` is the full gate. Do not write tests asserting prose headings or test-count growth. Run narrowly during repairs, broaden at completion or when shared behavior changes. Code-step reports include evidence and remaining limitations; M1 alone qualifies actual host behavior.
@@ -215,7 +233,7 @@ Before Step 1, no runtime suite exists: record the baseline as **not yet created
 - **Files:** `pyproject.toml`; `uv.lock`; `src/agent_advocate/__init__.py`; `src/agent_advocate/cli.py`; `src/agent_advocate/store.py`; `src/agent_advocate/service.py`; `tests/test_store.py`; `tests/test_cli.py`; `tests/test_privacy.py`; `README.md`; `CLAUDE.md`; `plan.md` (status/evidence only).
 - **Produces:** installable console entry point; schema version 1; run/checkpoint/observation/pattern/brief/status/finish commands; private store initialization; focused tests; runnable quickstart. `init` handles an absent seed file before Step 2 as an empty initial pattern set.
 - **Done when:** a real CLI subprocess creates a private store, registers a temporary repository, persists a checkpoint/observation, reads it from a fresh process and finishes the same run; identical event retries are idempotent and conflicting payloads fail; two writers preserve their events or report bounded contention; a data directory inside a Git tree is refused; missing/stale local evidence is visible; wrong-cwd invocation through `uv --project` works; `uv run --locked python -m pytest` and `git diff --check` pass. No model call is needed for this step.
-- **Depends on:** none
+- **Depends on:** qualified required review route and preserved-work reconciliation described above
 
 ### Step 2: Deliver the five advocate skills
 
@@ -225,8 +243,8 @@ Before Step 1, no runtime suite exists: record the baseline as **not yet created
 - **Issue:** #2
 - **Flags:** --reviewers code --isolation worktree
 - **Files:** `.agents/skills/assign-advocate/SKILL.md`; `.agents/skills/status-inquisition/SKILL.md`; `.agents/skills/coordination-cowbell/SKILL.md`; `.agents/skills/model-mother/SKILL.md`; `.agents/skills/advocate-wrap/SKILL.md`; `documentation/skill-contract.md`; `data/seed-patterns.json`; `data/model-families.json`; `src/agent_advocate/service.py`; `src/agent_advocate/cli.py`; `tests/test_patterns.py`; `tests/test_skill_resources.py`; `README.md`; `plan.md` (status/evidence only).
-- **Produces:** five concise discoverable packages using the same CLI and shared contract; sourced public cautions; stock model families; deterministic brief retrieval and pattern dispositions; public synthetic input examples in the shared contract.
-- **Done when:** package frontmatter identifies the five names and every local resource reference resolves; seed imports preserve private dispositions and do not duplicate identical content; brief selection returns at most five applicable patterns with candidates visibly labeled; corrections/wrap preserve source provenance and distinguish fix-applied from improved outcome; missing native agent/web capability instructions produce explicit unavailable behavior; full project tests and diff check pass. These checks certify package/mechanical behavior only; live skill execution remains M1.
+- **Produces:** five concise discoverable packages using the same CLI and shared contract; before-work capability assessment through existing observations; sourced public cautions and the generalized required-review-unavailable pattern; stock model families; deterministic brief retrieval and pattern dispositions; public synthetic input examples in the shared contract.
+- **Done when:** package frontmatter identifies the five names and every local resource reference resolves; seed imports preserve private dispositions and do not duplicate identical content; brief selection returns at most five applicable patterns with candidates visibly labeled; corrections/wrap preserve source provenance and distinguish fix-applied from improved outcome; missing native agent/web capability is explicit; synthetic capability observations round-trip through the existing CLI without new schema and retain unknown/unavailable distinctions; full project tests and diff check pass. Package checks do not claim the skill actually diagnoses a host; live behavior remains M1.
 - **Depends on:** 1
 
 ### Step 3: Raise persistent overdue alerts with a real watchdog
@@ -251,7 +269,7 @@ Before Step 1, no runtime suite exists: record the baseline as **not yet created
 - **Issue:** #4
 - **Files:** `documentation/acceptance.md` (read-only procedure), `plan.md` (acceptance status only).
 - **Produces:** observed verdict, sanitized result summary and private evidence references only; no source/config/runbook authorship.
-- **Done when:** follow the already-authored procedure in a fresh Codex session: discover all five skills; assign advocacy to a real bounded task and obtain an actual independent assessment; persist a checkpoint and retrieve it in a fresh invocation; research at least one exact named model through a real public source and persist a scoped caution; observe the real watchdog across two default poll intervals and one short overdue case; invoke cowbell to diagnose/dispose the alert; wrap with a real outcome and retrieve its relevant pattern later. Missing agent/web capabilities or unobserved skill execution make acceptance incomplete. Record mechanisms demonstrated separately from any unproven long-term productivity benefit. No live profile or monitored-project change is necessary.
+- **Done when:** follow the already-authored procedure in a fresh Codex session: discover all five skills; assign advocacy to real bounded work, report the actual required-review route's readiness with evidence, and obtain an independent assessment; use one clearly synthetic unsupported-adapter example to demonstrate an unavailable result with an owning repair, without attempting its build; persist a checkpoint and retrieve it in a fresh invocation; research at least one exact named model through a real public source and persist a scoped caution; observe the real watchdog across two default poll intervals and one short overdue case; invoke cowbell to diagnose/dispose the alert; wrap with a real outcome and retrieve its relevant pattern later. Missing agent/web capabilities or unobserved skill execution make acceptance incomplete. Record demonstrated mechanisms separately from unproven long-term productivity benefit. This product acceptance needs no live profile or monitored-project change.
 - **Depends on:** 1, 2, 3
 - **Commands:**
 
@@ -286,12 +304,14 @@ After Steps 1-3, hand off **Please run M1 next**. Do not mark v0 fully accepted 
 | P5 | P | v0 first, use it for v1, then resume Skill Mesh work | approved 2026-09-22 |
 | P6 | P | Public repository; private data may be kept private | approved 2026-09-22 |
 | P7 | P | Previously accepted build/plan/review/effort remedies remain future Skill Mesh work | approved 2026-09-22 |
+| P8 | P | Address recurring required-review unavailability first, then continue | requested 2026-09-23; narrow prerequisite exception to P5/P7 |
 | D1 | D | Standard-library Python runtime, uv, pytest dev, setuptools console entry | selected for small local build; implementation detail |
 | D2 | D | External per-user store; no public runtime exporter | selected to enforce private evidence boundary |
 | D3 | D | Project-local Codex skills; monitor targets through explicit run paths | selected to avoid installer/catalog dependencies in v0 |
 | D4 | D | Three code slices plus one short live acceptance | selected for useful slices and bounded proof |
 | D5 | D | Explicit checkpoints; timer never launches models or fixes | selected to keep watchdog predictable and cheap |
 | D6 | D | At most five relevant cautions; candidates remain hypotheses | selected to limit irrelevant context; tune after real use |
+| D7 | D | Repair the shared adapter in existing Skill Mesh Phase CD; detect readiness here using existing observations | selected 2026-09-23; no duplicate review engine or new capability database |
 
 ### Public source seeds
 

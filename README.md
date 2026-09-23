@@ -2,7 +2,7 @@
 
 Agent Advocate helps a coding coordinator spot delivery problems before work, at checkpoints, and after work. Five skills combine independent assessment, progress checks, escalation, model research and closeout learning over a private local SQLite store. A simple foreground timer raises persistent alerts when declared checkpoints or deadlines are overdue.
 
-**Current status: approved plan and repository scaffold. The CLI and skills are not implemented yet.** Three code steps and one live acceptance step are defined in [plan.md](plan.md). No runtime tests, host qualification or productivity improvement are claimed yet.
+**Current status: Step 1 is blocked with an unmerged CLI implementation preserved; main remains the plan/scaffold.** The [resume handoff](documentation/build-handoff.md) first resolves the shared review prerequisite, then continues the three code steps and live acceptance in [plan.md](plan.md). Product host qualification and productivity improvement remain unproven.
 
 - [Build handoff](documentation/build-handoff.md)
 - [Standalone v0 proposal](documentation/v0-proposal.html) — download/open in a browser, or print to PDF
@@ -13,7 +13,7 @@ Agent Advocate helps a coding coordinator spot delivery problems before work, at
 
 | Skill | Purpose |
 |---|---|
-| `assign-advocate` | Capture acceptance and time expectations; obtain an actual independent second view |
+| `assign-advocate` | Check required review capability, capture acceptance/time expectations, and obtain an independent second view |
 | `status-inquisition` | Check evidence, progress, uncertainties and the next useful action |
 | `coordination-cowbell` | Investigate suspected trouble or an overdue alert and recommend a response |
 | `model-mother` | Research the named models using current sources and retain scoped, dated cautions |
@@ -42,7 +42,7 @@ Windows is the first demonstrated target. The CLI has portable data-directory fa
    cd agent-advocate
    ```
 
-3. Read [AGENTS.md](AGENTS.md), [CLAUDE.md](CLAUDE.md), the [plan](plan.md) and the [build handoff](documentation/build-handoff.md). The owner's skill-enabled workspace can execute `/build-phase --plan plan.md --steps 1,2,3`; other contributors can implement the same issue-backed steps directly. That external build workflow is not a runtime dependency.
+3. Read [AGENTS.md](AGENTS.md), [CLAUDE.md](CLAUDE.md), the [plan](plan.md) and the [build handoff](documentation/build-handoff.md). The owner's current build must resolve its required review route and reconcile the preserved Step 1 candidate before resuming. Other contributors can implement the same issue-backed steps through a qualified workflow. Skill Mesh is not a product runtime dependency.
 
 After Step 1 creates the package and lockfile, setup will be:
 

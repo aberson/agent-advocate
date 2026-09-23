@@ -38,13 +38,13 @@ Keep requested model identity separate from observed identity. Missing identity 
 
 ## Development process
 
-Build only the three v0 code steps in plan.md, then the separate live acceptance step. Use focused tests while iterating and the full project suite at completion. A completed integrated-state suite may be cited by its immediately enclosing checkpoint when the tested source, tests, dependencies, configuration, and generated inputs are unchanged; otherwise rerun. This applies the approved duplicate-validation remedy locally and does not change any other project's gates.
+Before resuming, resolve the selected workflow's required review capability as plan.md section 11 specifies. Its shared adapter repair belongs to Skill Mesh Phase CD; preserve this project's existing Step 1 candidate and review history. Then complete the three v0 code steps and the separate live acceptance step. Use focused tests while iterating and the full project suite at completion. A completed integrated-state suite may be cited by its immediately enclosing checkpoint when source, tests, dependencies, configuration, and generated inputs are unchanged; otherwise rerun. This applies the approved duplicate-validation remedy locally and does not change any other project's gates.
 
 Require meaningful behavior tests and a real short watchdog observation; do not require increasing test counts or a multi-hour soak. Independently review code changes and the live skill evidence. Repeated repairs should trigger diagnosis under the existing build workflow, preserving its authorized retry budget. Keep reviews tied to defects and acceptance; optional improvements do not expand v0.
 
 ## Current state
 
-Planning and public repository setup only. No v0 implementation, runtime tests, skill execution, or live acceptance is claimed. Step status is owned by plan.md.
+Main contains the plan and scaffold. Step 1 is blocked with an unmerged implementation and review receipts preserved in its worktree; do not discard or recreate them. Product skill execution and live acceptance remain unproven. Current step status is owned by plan.md; reconcile the actual candidate and issue history before resume.
 
 ## Environment requirements
 
