@@ -13,7 +13,14 @@ import uuid
 import pytest
 
 import agent_advocate.store as store_module
-from agent_advocate.service import initialize, observe, start, status
+import agent_advocate.service as service_module
+from agent_advocate.service import (
+    MAX_LOCAL_EVIDENCE_BYTES,
+    initialize,
+    observe,
+    start,
+    status,
+)
 from agent_advocate.store import (
     PENDING_EVIDENCE_PREFIX,
     PENDING_EVIDENCE_SUFFIX,
@@ -229,6 +236,174 @@ def test_out_of_project_local_evidence_is_refused_without_a_private_copy(tmp_pat
     assert list((private / "evidence").glob("*.evidence")) == []
 
 
+def test_opened_evidence_handle_rejects_a_path_reparse_escape(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    project = git_project(tmp_path / "project")
+    private = tmp_path / "private"
+    store = Store(private)
+    initialize(store)
+    run, _ = start(
+        store,
+        {
+            "project_path": str(project),
+            "goal": "Capture only the validated opened object",
+            "acceptance": ["A mutable path cannot redirect evidence reads"],
+            "non_goals": [],
+            "models": [],
+            "next_check_at": future(),
+            "deadline_at": None,
+        },
+    )
+    source_parent = project / "receipts"
+    source_parent.mkdir()
+    source = source_parent / "receipt.txt"
+    source.write_bytes(b"validated in-project evidence")
+    outside_parent = tmp_path / "outside-receipts"
+    outside_parent.mkdir()
+    (outside_parent / source.name).write_bytes(b"outside private secret")
+    original_open = service_module._open_evidence_descriptor
+    swapped = False
+
+    def swap_path_then_open(path):
+        nonlocal swapped
+        if not swapped:
+            displaced = project / "original-receipts"
+            source_parent.rename(displaced)
+            if os.name == "nt":
+                subprocess.run(
+                    ["cmd", "/c", "mklink", "/J", str(source_parent), str(outside_parent)],
+                    capture_output=True,
+                    check=True,
+                    text=True,
+                )
+            else:
+                source_parent.symlink_to(outside_parent, target_is_directory=True)
+            swapped = True
+        return original_open(path)
+
+    monkeypatch.setattr(service_module, "_open_evidence_descriptor", swap_path_then_open)
+    with pytest.raises(service_module.RequestError, match="within the run project_path"):
+        observe(
+            store,
+            run["run_id"],
+            {
+                "observation_id": str(uuid.uuid4()),
+                "statement": "Reject a path redirected outside after validation",
+                "basis": "measured",
+                "evidence": [
+                    {
+                        "kind": "local",
+                        "locator": str(source),
+                        "captured_at": future(),
+                        "excerpt": None,
+                        "sha256": None,
+                    }
+                ],
+                "pattern_key": None,
+                "recommendation": None,
+                "analysis_kind": "none",
+                "assessor_id": None,
+                "supersedes": None,
+            },
+        )
+    assert swapped
+    assert list((private / "evidence").glob("*.evidence")) == []
+
+
+def test_oversized_local_evidence_is_visible_without_reading_or_copying(tmp_path: Path) -> None:
+    project = git_project(tmp_path / "project")
+    private = tmp_path / "private"
+    store = Store(private)
+    initialize(store)
+    run, _ = start(
+        store,
+        {
+            "project_path": str(project),
+            "goal": "Bound evidence reads",
+            "acceptance": ["Oversized sources are visible"],
+            "non_goals": [],
+            "models": [],
+            "next_check_at": future(),
+            "deadline_at": None,
+        },
+    )
+    source = project / "oversized.bin"
+    with source.open("wb") as handle:
+        handle.truncate(MAX_LOCAL_EVIDENCE_BYTES + 1)
+    observation, _ = observe(
+        store,
+        run["run_id"],
+        {
+            "observation_id": str(uuid.uuid4()),
+            "statement": "Do not hash an oversized source",
+            "basis": "measured",
+            "evidence": [{"kind": "local", "locator": str(source), "captured_at": future(), "excerpt": None, "sha256": None}],
+            "pattern_key": None,
+            "recommendation": None,
+            "analysis_kind": "none",
+            "assessor_id": None,
+            "supersedes": None,
+        },
+    )
+    assert observation["evidence"][0]["availability"] == "too-large"
+    assert list((private / "evidence").glob("*.evidence")) == []
+
+
+def test_local_evidence_that_grows_during_hashing_is_not_captured(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    project = git_project(tmp_path / "project")
+    private = tmp_path / "private"
+    store = Store(private)
+    initialize(store)
+    run, _ = start(
+        store,
+        {
+            "project_path": str(project),
+            "goal": "Reject changing evidence",
+            "acceptance": ["A changing source has no digest or private copy"],
+            "non_goals": [],
+            "models": [],
+            "next_check_at": future(),
+            "deadline_at": None,
+        },
+    )
+    source = project / "growing.bin"
+    source.write_bytes(b"a" * (128 * 1024))
+    original_read = service_module._read_evidence_block
+    grew = False
+
+    def grow_after_first_read(handle, size):
+        nonlocal grew
+        block = original_read(handle, size)
+        if block and not grew:
+            with source.open("ab") as writer:
+                writer.write(b"growth")
+            grew = True
+        return block
+
+    monkeypatch.setattr(service_module, "_read_evidence_block", grow_after_first_read)
+    observation, _ = observe(
+        store,
+        run["run_id"],
+        {
+            "observation_id": str(uuid.uuid4()),
+            "statement": "Do not retain a moving source",
+            "basis": "measured",
+            "evidence": [{"kind": "local", "locator": str(source), "captured_at": future(), "excerpt": None, "sha256": None}],
+            "pattern_key": None,
+            "recommendation": None,
+            "analysis_kind": "none",
+            "assessor_id": None,
+            "supersedes": None,
+        },
+    )
+    assert grew
+    assert observation["evidence"][0]["availability"] == "changed"
+    assert list((private / "evidence").glob("*.evidence")) == []
+
+
 def test_home_and_filesystem_root_cannot_be_registered_as_projects(tmp_path: Path) -> None:
     private = tmp_path / "private"
     assert invoke(private, "init").returncode == 0
@@ -266,6 +441,24 @@ def test_private_store_permissions_and_incomplete_initialization_are_explicit(
     assert_private_permissions((private, private / "evidence", private / "logs", private / "advocate.sqlite3"))
 
     if os.name == "nt":
+        arbitrary = tmp_path / "arbitrary-explicit-grant"
+        arbitrary.mkdir()
+        subprocess.run(
+            [
+                str(windows_system_binary("icacls.exe")),
+                str(arbitrary),
+                "/grant:r",
+                "*S-1-5-32-546:(OI)(CI)(F)",
+            ],
+            capture_output=True,
+            check=True,
+            text=True,
+        )
+        initialize(Store(arbitrary))
+        assert_private_permissions(
+            (arbitrary, arbitrary / "evidence", arbitrary / "logs", arbitrary / "advocate.sqlite3")
+        )
+
         insecure = tmp_path / "insecure"
         insecure.mkdir()
         subprocess.run(

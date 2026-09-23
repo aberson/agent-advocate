@@ -2,14 +2,17 @@
 
 from __future__ import annotations
 
+from collections.abc import Iterator
+import contextlib
 from datetime import UTC, date, datetime
 import hashlib
 import json
+import os
 from pathlib import Path
 import re
 import stat
 import tempfile
-from typing import Any
+from typing import Any, BinaryIO
 import uuid
 
 from .store import (
@@ -27,6 +30,8 @@ from .store import (
 
 MAX_REQUEST_BYTES = 256 * 1024
 MAX_EXCERPT_BYTES = 8 * 1024
+# Local evidence is intentionally bounded: at most 8 MiB is read and hashed.
+MAX_LOCAL_EVIDENCE_BYTES = 8 * 1024 * 1024
 RUN_STATES = {"active", "checking", "waiting", "paused", "unknown", FINISHED_RUN_STATE}
 CHECKPOINT_STATES = RUN_STATES - {FINISHED_RUN_STATE}
 BASES = {"measured", "reported", "inferred"}
@@ -460,24 +465,34 @@ def _capture_evidence(
                 result["availability"] = "not-local"
                 captured.append(result)
                 continue
-            source = _local_evidence_path(item["locator"], project_path)
             try:
-                source_mode = source.stat().st_mode
+                with _open_local_evidence(
+                    item["locator"], project_path
+                ) as (handle, opened_stat):
+                    if not stat.S_ISREG(opened_stat.st_mode):
+                        result["availability"] = "not-regular"
+                        captured.append(result)
+                        continue
+                    if opened_stat.st_size > MAX_LOCAL_EVIDENCE_BYTES:
+                        result["availability"] = "too-large"
+                        captured.append(result)
+                        continue
+                    assert handle is not None
+                    digest, excerpt, read_status = _file_digest_and_excerpt(
+                        handle, opened_stat
+                    )
             except FileNotFoundError:
                 result["availability"] = "missing"
                 captured.append(result)
                 continue
             except OSError as error:
-                raise StoreUnavailableError(f"cannot inspect local evidence: {error}") from error
-            if not stat.S_ISREG(source_mode):
-                result["availability"] = "not-regular"
+                raise StoreUnavailableError(f"cannot read local evidence: {error}") from error
+            if read_status != "captured":
+                result["availability"] = read_status
                 captured.append(result)
                 continue
-            try:
-                digest, excerpt = _file_digest_and_excerpt(source)
-            except OSError as error:
-                raise StoreUnavailableError(f"cannot read local evidence: {error}") from error
             expected = item["sha256"]
+            assert digest is not None
             result["sha256"] = digest
             result["excerpt"] = excerpt.decode("utf-8", errors="replace")
             result["content_status"] = "private-untrusted"
@@ -493,17 +508,127 @@ def _capture_evidence(
     return captured, pending_copies
 
 
-def _local_evidence_path(locator: str, project_path: str) -> Path:
+def _local_evidence_path(locator: str, project_path: str) -> tuple[Path, Path]:
     try:
-        source = Path(locator).expanduser().resolve(strict=False)
-        project = Path(project_path).resolve(strict=False)
+        source = Path(os.path.abspath(Path(locator).expanduser()))
+        project = Path(project_path).resolve(strict=True)
     except OSError as error:
         raise StoreUnavailableError(f"cannot resolve local evidence path: {error}") from error
     try:
         source.relative_to(project)
     except ValueError as error:
         raise RequestError("local evidence must resolve within the run project_path") from error
-    return source
+    return source, project
+
+
+@contextlib.contextmanager
+def _open_local_evidence(
+    locator: str, project_path: str
+) -> Iterator[tuple[BinaryIO | None, os.stat_result]]:
+    """Open once, then validate the opened object before reading from it."""
+
+    source, project = _local_evidence_path(locator, project_path)
+    descriptor = _open_evidence_descriptor(source)
+    handle: BinaryIO | None = None
+    try:
+        opened_stat = os.fstat(descriptor)
+        if os.name == "nt":
+            final_path = _windows_final_path(descriptor)
+            try:
+                final_path.relative_to(project)
+            except ValueError as error:
+                raise RequestError(
+                    "local evidence must resolve within the run project_path"
+                ) from error
+        else:
+            final_path = source.resolve(strict=True)
+            final_stat = final_path.stat()
+            if not os.path.samestat(opened_stat, final_stat):
+                raise RequestError("local evidence path changed while opening")
+            try:
+                final_path.relative_to(project)
+            except ValueError as error:
+                raise RequestError(
+                    "local evidence must resolve within the run project_path"
+                ) from error
+        if stat.S_ISREG(opened_stat.st_mode):
+            handle = os.fdopen(descriptor, "rb")
+            descriptor = -1
+        yield handle, opened_stat
+    finally:
+        if handle is not None:
+            handle.close()
+        if descriptor >= 0:
+            os.close(descriptor)
+
+
+def _open_evidence_descriptor(path: Path) -> int:
+    if os.name != "nt":
+        flags = os.O_RDONLY | getattr(os, "O_BINARY", 0)
+        return os.open(path, flags)
+
+    import ctypes
+    from ctypes import wintypes
+    import msvcrt
+
+    kernel32 = ctypes.WinDLL("kernel32", use_last_error=True)
+    kernel32.CreateFileW.argtypes = (
+        wintypes.LPCWSTR,
+        wintypes.DWORD,
+        wintypes.DWORD,
+        ctypes.c_void_p,
+        wintypes.DWORD,
+        wintypes.DWORD,
+        wintypes.HANDLE,
+    )
+    kernel32.CreateFileW.restype = wintypes.HANDLE
+    raw_handle = kernel32.CreateFileW(
+        str(path),
+        0x80000000,
+        0x00000001 | 0x00000002 | 0x00000004,
+        None,
+        3,
+        0x02000000,
+        None,
+    )
+    if raw_handle == wintypes.HANDLE(-1).value:
+        raise ctypes.WinError(ctypes.get_last_error())
+    try:
+        flags = os.O_RDONLY | getattr(os, "O_BINARY", 0)
+        descriptor = msvcrt.open_osfhandle(raw_handle, flags)
+    except BaseException:
+        kernel32.CloseHandle(raw_handle)
+        raise
+    return descriptor
+
+
+def _windows_final_path(descriptor: int) -> Path:
+    import ctypes
+    from ctypes import wintypes
+    import msvcrt
+
+    kernel32 = ctypes.WinDLL("kernel32", use_last_error=True)
+    kernel32.GetFinalPathNameByHandleW.argtypes = (
+        wintypes.HANDLE,
+        wintypes.LPWSTR,
+        wintypes.DWORD,
+        wintypes.DWORD,
+    )
+    kernel32.GetFinalPathNameByHandleW.restype = wintypes.DWORD
+    raw_handle = msvcrt.get_osfhandle(descriptor)
+    size = kernel32.GetFinalPathNameByHandleW(raw_handle, None, 0, 0)
+    if not size:
+        raise ctypes.WinError(ctypes.get_last_error())
+    buffer = ctypes.create_unicode_buffer(size + 1)
+    written = kernel32.GetFinalPathNameByHandleW(raw_handle, buffer, len(buffer), 0)
+    if not written or written >= len(buffer):
+        raise ctypes.WinError(ctypes.get_last_error())
+    value = buffer.value
+    if value.startswith("\\\\?\\UNC\\"):
+        value = "\\\\" + value[8:]
+    elif value.startswith("\\\\?\\"):
+        value = value[4:]
+    return Path(value)
 
 
 def _write_pending_evidence(store: Store, excerpt: bytes) -> Path:
@@ -559,15 +684,31 @@ def public_evidence(evidence: dict[str, Any]) -> dict[str, Any]:
     return result
 
 
-def _file_digest_and_excerpt(path: Path) -> tuple[str, bytes]:
+def _file_digest_and_excerpt(
+    handle: BinaryIO, opened_stat: os.stat_result
+) -> tuple[str | None, bytes, str]:
     digest = hashlib.sha256()
     excerpt = bytearray()
-    with path.open("rb") as handle:
-        while block := handle.read(64 * 1024):
-            digest.update(block)
-            if len(excerpt) < MAX_EXCERPT_BYTES:
-                excerpt.extend(block[: MAX_EXCERPT_BYTES - len(excerpt)])
-    return digest.hexdigest(), bytes(excerpt)
+    total = 0
+    while block := _read_evidence_block(
+        handle, min(64 * 1024, MAX_LOCAL_EVIDENCE_BYTES + 1 - total)
+    ):
+        total += len(block)
+        if total > MAX_LOCAL_EVIDENCE_BYTES:
+            return None, b"", "too-large"
+        digest.update(block)
+        if len(excerpt) < MAX_EXCERPT_BYTES:
+            excerpt.extend(block[: MAX_EXCERPT_BYTES - len(excerpt)])
+    final_stat = os.fstat(handle.fileno())
+    before = (opened_stat.st_size, opened_stat.st_mtime_ns, opened_stat.st_ctime_ns)
+    after = (final_stat.st_size, final_stat.st_mtime_ns, final_stat.st_ctime_ns)
+    if before != after:
+        return None, b"", "changed"
+    return digest.hexdigest(), bytes(excerpt), "captured"
+
+
+def _read_evidence_block(handle: BinaryIO, size: int) -> bytes:
+    return handle.read(size)
 
 
 def _observation_exists(store: Store, observation_id: str) -> bool:

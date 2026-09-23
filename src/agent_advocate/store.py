@@ -9,13 +9,13 @@ from __future__ import annotations
 
 from collections.abc import Iterator
 import contextlib
+import ctypes
+from ctypes import wintypes
 from datetime import UTC, datetime
 import json
 import os
 from pathlib import Path
-import re
 import sqlite3
-import subprocess
 from typing import Any
 
 
@@ -24,7 +24,6 @@ DATABASE_NAME = "advocate.sqlite3"
 FINISHED_RUN_STATE = "finished"
 PENDING_EVIDENCE_PREFIX = ".pending-"
 PENDING_EVIDENCE_SUFFIX = ".evidence"
-WINDOWS_ACCOUNT = re.compile(r'^[^\\/:*?"<>|\r\n]+\\[^\\/:*?"<>|\r\n]+$')
 
 
 class AdvocateError(Exception):
@@ -692,52 +691,122 @@ def _restrict_private_file(path: Path) -> None:
 
 
 def _restrict_windows_path(path: Path, directory: bool) -> None:
-    """Replace inherited broad ACLs with an explicit current-user ACL."""
+    """Replace the complete DACL with one full-control current-user ACE."""
 
+    advapi32 = ctypes.WinDLL("advapi32", use_last_error=True)
+    kernel32 = ctypes.WinDLL("kernel32", use_last_error=True)
+    token = wintypes.HANDLE()
+    security_descriptor = ctypes.c_void_p()
     try:
-        account = subprocess.run(
-            [str(_windows_system_binary("whoami.exe"))],
-            capture_output=True,
-            check=True,
-            text=True,
-        ).stdout.strip()
-        if not WINDOWS_ACCOUNT.fullmatch(account):
-            raise OSError("whoami returned an invalid account name")
-        permission = "(OI)(CI)F" if directory else "F"
-        icacls = str(_windows_system_binary("icacls.exe"))
-        for command in (
-            [icacls, str(path), "/inheritance:r", "/grant:r", f"{account}:{permission}"],
-            [
-                icacls,
-                str(path),
-                "/remove:g",
-                "*S-1-1-0",
-                "*S-1-5-11",
-                "*S-1-5-18",
-                "*S-1-3-4",
-                "*S-1-5-32-544",
-                "*S-1-5-32-545",
-            ],
+        advapi32.OpenProcessToken.argtypes = (
+            wintypes.HANDLE,
+            wintypes.DWORD,
+            ctypes.POINTER(wintypes.HANDLE),
+        )
+        advapi32.OpenProcessToken.restype = wintypes.BOOL
+        kernel32.GetCurrentProcess.restype = wintypes.HANDLE
+        kernel32.CloseHandle.argtypes = (wintypes.HANDLE,)
+        kernel32.CloseHandle.restype = wintypes.BOOL
+        kernel32.LocalFree.argtypes = (ctypes.c_void_p,)
+        kernel32.LocalFree.restype = ctypes.c_void_p
+        if not advapi32.OpenProcessToken(
+            kernel32.GetCurrentProcess(), 0x0008, ctypes.byref(token)
         ):
-            subprocess.run(command, capture_output=True, check=True, text=True)
-    except (OSError, subprocess.SubprocessError) as error:
+            raise ctypes.WinError(ctypes.get_last_error())
+
+        required = wintypes.DWORD()
+        advapi32.GetTokenInformation.argtypes = (
+            wintypes.HANDLE,
+            ctypes.c_int,
+            ctypes.c_void_p,
+            wintypes.DWORD,
+            ctypes.POINTER(wintypes.DWORD),
+        )
+        advapi32.GetTokenInformation.restype = wintypes.BOOL
+        advapi32.GetTokenInformation(token, 1, None, 0, ctypes.byref(required))
+        if not required.value:
+            raise ctypes.WinError(ctypes.get_last_error())
+        token_info = ctypes.create_string_buffer(required.value)
+        if not advapi32.GetTokenInformation(
+            token, 1, token_info, required, ctypes.byref(required)
+        ):
+            raise ctypes.WinError(ctypes.get_last_error())
+
+        class SidAndAttributes(ctypes.Structure):
+            _fields_ = [("sid", ctypes.c_void_p), ("attributes", wintypes.DWORD)]
+
+        user = ctypes.cast(token_info, ctypes.POINTER(SidAndAttributes)).contents
+        sid_text = wintypes.LPWSTR()
+        advapi32.ConvertSidToStringSidW.argtypes = (
+            ctypes.c_void_p,
+            ctypes.POINTER(wintypes.LPWSTR),
+        )
+        advapi32.ConvertSidToStringSidW.restype = wintypes.BOOL
+        if not advapi32.ConvertSidToStringSidW(user.sid, ctypes.byref(sid_text)):
+            raise ctypes.WinError(ctypes.get_last_error())
+        try:
+            inheritance = "OICI" if directory else ""
+            sddl = f"D:P(A;{inheritance};FA;;;{sid_text.value})"
+        finally:
+            kernel32.LocalFree(sid_text)
+
+        advapi32.ConvertStringSecurityDescriptorToSecurityDescriptorW.argtypes = (
+            wintypes.LPCWSTR,
+            wintypes.DWORD,
+            ctypes.POINTER(ctypes.c_void_p),
+            ctypes.POINTER(wintypes.DWORD),
+        )
+        if not advapi32.ConvertStringSecurityDescriptorToSecurityDescriptorW(
+            sddl, 1, ctypes.byref(security_descriptor), None
+        ):
+            raise ctypes.WinError(ctypes.get_last_error())
+        dacl_present = wintypes.BOOL()
+        dacl_defaulted = wintypes.BOOL()
+        dacl = ctypes.c_void_p()
+        advapi32.GetSecurityDescriptorDacl.argtypes = (
+            ctypes.c_void_p,
+            ctypes.POINTER(wintypes.BOOL),
+            ctypes.POINTER(ctypes.c_void_p),
+            ctypes.POINTER(wintypes.BOOL),
+        )
+        advapi32.GetSecurityDescriptorDacl.restype = wintypes.BOOL
+        if not advapi32.GetSecurityDescriptorDacl(
+            security_descriptor,
+            ctypes.byref(dacl_present),
+            ctypes.byref(dacl),
+            ctypes.byref(dacl_defaulted),
+        ):
+            raise ctypes.WinError(ctypes.get_last_error())
+        if not dacl_present:
+            raise OSError("generated private DACL is absent")
+        advapi32.SetNamedSecurityInfoW.argtypes = (
+            wintypes.LPWSTR,
+            ctypes.c_int,
+            wintypes.DWORD,
+            ctypes.c_void_p,
+            ctypes.c_void_p,
+            ctypes.c_void_p,
+            ctypes.c_void_p,
+        )
+        advapi32.SetNamedSecurityInfoW.restype = wintypes.DWORD
+        result = advapi32.SetNamedSecurityInfoW(
+            str(path),
+            1,
+            0x00000004 | 0x80000000,
+            None,
+            None,
+            dacl,
+            None,
+        )
+        if result:
+            raise ctypes.WinError(result)
+    except (OSError, ValueError) as error:
         raise OSError(f"cannot restrict Windows ACL for {path}: {error}") from error
-
-
-def _windows_system_binary(name: str) -> Path:
-    """Resolve a Windows system executable without searching the caller's cwd."""
-
-    system_root = os.environ.get("SystemRoot")
-    if not system_root:
-        raise OSError("SystemRoot is unavailable")
-    try:
-        system32 = (Path(system_root).resolve(strict=True) / "System32").resolve(strict=True)
-        binary = (system32 / name).resolve(strict=True)
-    except OSError as error:
-        raise OSError(f"cannot resolve Windows system executable {name}: {error}") from error
-    if binary.parent != system32 or not binary.is_file():
-        raise OSError(f"Windows system executable is unavailable: {name}")
-    return binary
+    finally:
+        if security_descriptor:
+            kernel32.LocalFree(security_descriptor)
+        if token:
+            kernel32.CloseHandle(token)
 
 
 def _remove_private_files(paths: list[Path], *, suppress_errors: bool = False) -> None:
