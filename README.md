@@ -8,6 +8,7 @@ Agent Advocate helps a coding coordinator spot delivery problems before work, at
 - [Standalone v0 proposal](documentation/v0-proposal.html) — download/open in a browser, or print to PDF
 - [Technical review: PASS](documentation/plan-review.md) and [fresh-context review: READY](documentation/plan-wrap.md)
 - [Public/private data boundary](documentation/privacy.md)
+- [Case-study seed: testing overrun during an anti-overengineering intervention](documentation/case-studies/2026-09-23-testing-overrun.md)
 
 ## Planned workflows
 
