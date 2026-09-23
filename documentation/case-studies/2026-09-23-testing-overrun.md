@@ -78,3 +78,14 @@ This is a sanitized narrative. Raw logs, local paths, process identities, sessio
 - [Stop checkpoint on issue #222](https://github.com/aberson/skill-mesh/issues/222#issuecomment-5801865782) and [Agent Advocate pause handoff at `cc13ce9`](https://github.com/aberson/agent-advocate/blob/cc13ce95736128798ab45392417b6cc3edf33859/documentation/build-handoff.md): closeout and no automatic restart.
 
 The public records support the outcome and gate requirements. The causal interpretation and proposed advocate interventions are a retrospective, not proof of future productivity gains. One bounded independent critique checked the analysis for overclaiming; no code tests or build resumption were needed to write this document.
+
+## Bounded-resume follow-up
+
+The later bounded resume stayed within its testing limit and produced a candidate
+with a green full suite, but the final required review still blocked it. One finding
+was a real POSIX FIFO blocking-open defect. A second finding treated a one-byte,
+non-hashed growth sentinel as violating an exact 8 MiB comment even though the plan
+required bounded ingestion. This illustrates another decision point: preserve a
+reviewer's raw verdict while separately recording a coordinator's severity or
+contract disagreement. Passing tests do not override review, and a disputed review
+finding should not silently create an unlimited repair loop.

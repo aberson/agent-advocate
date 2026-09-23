@@ -1,14 +1,32 @@
 # Build handoff: Agent Advocate v0
 
-**Codex build route still blocked, 2026-09-23.** The reviewed shared repair is now
-on Skill Mesh main (`2e7f325`) under an explicit focused-validation exception; its
-101.7-minute interrupted full suite remains INCOMPLETE/deferred. One bounded
-installed attempt built and hash-checked a disposable profile, then stopped because
-the proof agent launched the verifier without `tty: true`: it exited on closed
-stdin, without a live writable session. No fixture build/reviews ran, and the real
-profile is unchanged. This was a launch mistake, not proof that the host cannot
-support the route. Services and the disposable tree are cleaned up. No automatic
-retry or Agent Advocate implementation starts from this closeout.
+**Step 1 remains blocked after a qualified Codex review, 2026-09-23.** Skill Mesh
+main `110d916` records the installed route's authenticated `ADVANCE`, six passing
+lenses, and all 129 installed files matching its ledger and frozen manifest. This
+consumer session also passed its capability preflight. The route is no longer the
+blocker.
+
+The preserved implementation was committed at `0dbc4ee`, reconciled with current
+main at `b78da79`, then reviewed. Iteration 4 returned three security Blocks. The
+single authorized fifth developer pass repaired those items in `e4a9d6d`; the full
+suite passed 29 tests in 46.45 seconds and `git diff --check` passed. Round 5 still
+returned canonical `NEEDS-WORK`:
+
+- `src/agent_advocate/service.py:568`: on POSIX, opening an in-project FIFO can
+  block before `fstat` classifies it as non-regular. Add `O_NONBLOCK` to the POSIX
+  evidence open and cover FIFO rejection.
+- `src/agent_advocate/service.py:692-694`: correctness and bugs reviewers treated
+  the 8 MiB + one-byte growth sentinel as violating the code comment's exact 8 MiB
+  read wording. The coordinator disputes Block severity because work remains
+  strictly bounded, the extra byte is neither hashed nor captured, and the plan
+  requires bounded ingestion rather than an exact physical-read cap. Preserve the
+  raw verdict; resolve the policy/wording before changing behavior.
+
+No sixth repair/review round is authorized. Candidate `e4a9d6d` remains preserved
+on `build-step-1-20260923`; Steps 2 and 3 therefore did not start, and M1 remains
+TODO. The original historical retry maximum is unknown. Preserve four earlier
+developer passes, three earlier completed reviews, two failed reviewer starts,
+iteration 4, and the fifth pass/review as separate history.
 
 The operator approved this v0 and public repository on 2026-09-22, then requested the recurring review-capability blocker be addressed first on 2026-09-23. Scope is settled in [plan.md](../plan.md); do not reopen routine stack, privacy, timer or host choices. Step 1 now has a preserved unmerged implementation and review history. This is a resume handoff, not a request to start it again.
 
@@ -29,20 +47,15 @@ git worktree list
 
 Expected remote: `https://github.com/aberson/agent-advocate.git` (an SSH equivalent is also valid). Read `AGENTS.md`, `CLAUDE.md`, `plan.md` and the latest plan-review/plan-wrap reports. Reconcile any work that landed after this handoff with Git and issue state; do not overwrite another session or restart a completed step.
 
-## Resolve the prerequisite before dispatch
+## Qualified review prerequisite
 
-Read the actual installed `review-deep` adapter and its helper files. The current Codex adapter deliberately refuses isolated lens dispatch; having a child-spawn tool alone does not override it. The owning fix is the amended [Skill Mesh Phase CD plan](https://github.com/aberson/skill-mesh/blob/main/documentation/codex-deep-review-unblock-plan.md), existing [#222](https://github.com/aberson/skill-mesh/issues/222) and [#223](https://github.com/aberson/skill-mesh/issues/223). Its scope includes packaged code-lane helpers, capacity-aware independent reviewer batches, capability-conditioned mapping, installed-host proof and normal profile refresh. Keep this project's deep review flags intact.
+The installed `review-deep` adapter and helpers are qualified for this host/session shape. The owning history remains in the amended [Skill Mesh Phase CD plan](https://github.com/aberson/skill-mesh/blob/main/documentation/codex-deep-review-unblock-plan.md), [#222](https://github.com/aberson/skill-mesh/issues/222) and [#223](https://github.com/aberson/skill-mesh/issues/223). Keep this project's deep review flags intact.
 
 That repair runs in the **Skill Mesh checkout**, using its own instructions and plan. It does not resume the rest of that repository's backlog. Do not hand-edit a generated consumer skill or add a project-local copy of the shared engine. A source change, a passing static test or an unactivated disposable install is not a working review route. Reuse a valid capability receipt only for the unchanged host/session/package; otherwise qualify the actual route.
 
-The next requested continuation should perform only Phase CD Step 156 first,
-using its recorded source acceptance and existing reviewed runbook. Launch the
-long-lived installed verifier with `exec_command` using `tty: true`, retain its
-parent-only handle, and use `write_stdin` for the protocol. Load the installed
-contracts completely before probing. Allow one 20-minute total setup/proof/normal
-activation attempt; no full Skill Mesh suite, source reimplementation or repeated
-reviews of unchanged source. If that attempt is incomplete, checkpoint the exact
-blocker and stop. The launch correction is recorded but has not yet been proved.
+Do not rerun Skill Mesh qualification or its deferred root suite from this product.
+Recheck the consumer capability receipt only if the host, session, installed
+packages, or route changes.
 
 Reconcile issue #1 and the existing worktree's latest developer/reviewer receipts. Later Claude/Opus review rounds exist after the first blocked report. Preserve their candidate, unresolved findings and consumed retry budget; coordinate with the current builder before taking ownership. A qualified, separately authorized Claude route does not qualify Codex, and this handoff does not silently switch models or hosts.
 
