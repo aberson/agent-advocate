@@ -89,3 +89,10 @@ required bounded ingestion. This illustrates another decision point: preserve a
 reviewer's raw verdict while separately recording a coordinator's severity or
 contract disagreement. Passing tests do not override review, and a disputed review
 finding should not silently create an unlimited repair loop.
+
+The operator subsequently approved a one-time closing exception. The coordinator
+reused an existing repair and its Windows test receipt, ran the missing Linux FIFO
+regression in 0.39 seconds, and obtained one independent closing review of the
+affected behavior. Step 1 was accepted with the original deep verdict preserved;
+the [closure record](../step-1-closure.md) distinguishes these authorities. This
+is one observed completion, not proof of long-term productivity improvement.

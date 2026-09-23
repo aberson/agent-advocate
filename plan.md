@@ -4,7 +4,7 @@
 
 **Objective:** help a coding coordinator finish useful work by surfacing evidenced delivery problems before work, at normal checkpoints, and after work, with a simple timer that makes overdue expectations visible.
 
-**Status:** APPROVED SCOPE; Step 1 remains blocked after its bounded fifth developer/review round, with candidate `e4a9d6d` preserved on `build-step-1-20260923`; Steps 2/3/M1 remain TODO. The selected Codex review route is qualified and active. On 2026-09-23 the operator requested that recurring review-capability failures be addressed first, then work continue. The five-skill v0, SQLite, configurable 60-second timer, Codex first, public repository and private runtime storage were approved on 2026-09-22. No repeated approval of those defaults is needed.
+**Status:** Step 1 DONE under the operator-approved closing exception P10; code `27e1ce1`, completed Windows suite, actual Linux FIFO regression and one independent closing review. See [the acceptance receipt](documentation/step-1-closure.md). Steps 2/3/M1 remain TODO. The selected Codex review route is qualified and active. The five-skill v0, SQLite, configurable 60-second timer, Codex first, public repository and private runtime storage were approved on 2026-09-22. No repeated approval of those defaults is needed.
 
 **Release sequence:** repair the selected build workflow's review prerequisite, resume the preserved v0 work, use v0 during selected v1 work, then resume the broader separately approved Skill Mesh improvements. Agent Advocate's product has no runtime dependency on Skill Mesh, Switchboard, or an observatory. The current workspace's chosen Codex build workflow needs the specific shared review repair described in section 11; other qualified build workflows need not depend on Skill Mesh. No broad v1 build or unrelated Skill Mesh work is authorized by this v0 plan.
 
@@ -248,21 +248,53 @@ or captured, and the plan requires bounded work rather than an exact 8 MiB physi
 read. Preserve both the raw verdict and this coordinator disagreement. Four prior
 developer passes, three prior completed reviews, two failed review starts, iteration
 4, and the single authorized fifth pass/review remain distinct; the original retry
-maximum is unknown and was not reset. No sixth round is authorized.
+maximum is unknown and was not reset. That attempt stopped without another round;
+the later explicit closing authorization is recorded below.
 A qualifying full-suite receipt is reusable only while source, tests, dependencies,
 configuration and generated inputs remain unchanged. A further test/review cycle
 must name the changed input or unresolved acceptance defect it will check. Optional
 improvements become deferred work. The shared Skill Mesh root suite is outside
-this consumer build. Keep the declared deep gates for Steps 1 and 3.
+this consumer build. Keep the declared deep gates for Steps 1 and 3, subject to
+the explicitly approved Step 1 closing exception below.
+
+### Approved Step 1 closing exception (2026-09-23)
+
+The operator explicitly approved a narrowly scoped closing review and assigned
+this coordinator ownership of the existing Step 1 fix. This supersedes the prior
+no-sixth-round stop only for closing the FIFO and size-limit findings. It does not
+restart the three-step phase or alter Step 3's review requirement.
+
+Use the existing repair to open POSIX evidence nonblocking and enforce the exact
+8 MiB read limit with final metadata checks; retain its completed Windows suite
+receipt and run the missing actual Linux FIFO regression. One fresh independent
+reviewer checks this repair and affected behavior against candidate `e4a9d6d`.
+Reuse previous evidence for unchanged code. Do not launch another six-lens round
+or rerun unchanged tests. A material unresolved defect prevents acceptance.
+
+The closing attempt has a 30-minute wall-clock limit, starting 2026-09-23
+23:48:38 UTC and ending 2026-09-24 00:18:38 UTC, with no automatic repeat. On
+successful validation and closing review, record Step 1 acceptance and merge the
+preserved implementation. Keep the historical deep `NEEDS-WORK` and authenticated
+`BLOCKED` records unchanged; this is a separate operator-approved acceptance,
+not a new deep-review PASS or authenticated workflow ADVANCE. The unchanged
+product plan needs no additional plan-review cycle for this execution exception.
+
+**Outcome:** accepted on 2026-09-23 for code `27e1ce1`. The preserved Windows
+full-suite receipt is 30 passed, one platform skip in 47.08 seconds. The missing
+FIFO regression passed on actual WSL Ubuntu in 0.39 seconds. One fresh independent
+closing review returned PASS for the narrow delta with no material finding.
+Source, tests, dependencies and configuration remain unchanged after that review;
+the completed receipts also cover their identical integrated state. See the
+[closure record](documentation/step-1-closure.md). This execution ends at Step 1.
 
 ### Step 1: Persist an advocated run and its evidence
 
 - **Problem:** A coordinator needs one durable place to register work, checkpoints, observations and cautions without exposing private evidence.
 - **Type:** code
-- **Status:** BLOCKED (2026-09-23; candidate `e4a9d6d`, round 5 `NEEDS-WORK`)
+- **Status:** DONE (2026-09-23; operator-approved P10 closure, code `27e1ce1`)
 - **Issue:** #1
 - **Flags:** --reviewers deep --isolation worktree
-- **Files:** `pyproject.toml`; `uv.lock`; `src/agent_advocate/__init__.py`; `src/agent_advocate/cli.py`; `src/agent_advocate/store.py`; `src/agent_advocate/service.py`; `tests/test_store.py`; `tests/test_cli.py`; `tests/test_privacy.py`; `README.md`; `CLAUDE.md`; `plan.md` (status/evidence only).
+- **Files:** `.gitignore`; `pyproject.toml`; `uv.lock`; `src/agent_advocate/__init__.py`; `src/agent_advocate/cli.py`; `src/agent_advocate/store.py`; `src/agent_advocate/service.py`; `tests/test_store.py`; `tests/test_cli.py`; `tests/test_privacy.py`; `README.md`; `CLAUDE.md`; `plan.md` (status/evidence only).
 - **Produces:** installable console entry point; schema version 1; run/checkpoint/observation/pattern/brief/status/finish commands; private store initialization; focused tests; runnable quickstart. `init` handles an absent seed file before Step 2 as an empty initial pattern set.
 - **Done when:** a real CLI subprocess creates a private store, registers a temporary repository, persists a checkpoint/observation, reads it from a fresh process and finishes the same run; identical event retries are idempotent and conflicting payloads fail; two writers preserve their events or report bounded contention; a data directory inside a Git tree is refused; missing/stale local evidence is visible; wrong-cwd invocation through `uv --project` works; `uv run --locked python -m pytest` and `git diff --check` pass. No model call is needed for this step.
 - **Depends on:** qualified required review route and preserved-work reconciliation described above
@@ -338,6 +370,7 @@ After Steps 1-3, hand off **Please run M1 next**. Do not mark v0 fully accepted 
 | P7 | P | Previously accepted build/plan/review/effort remedies remain future Skill Mesh work | approved 2026-09-22 |
 | P8 | P | Address recurring required-review unavailability first, then continue | requested 2026-09-23; narrow prerequisite exception to P5/P7 |
 | P9 | P | Make the existing build invocation usable without repeating endless testing | requested 2026-09-23 |
+| P10 | P | Close Step 1 with its narrow repair, missing Linux regression and one independent closing review; merge on acceptance | approved 2026-09-23; 30-minute exception, prior deep verdict preserved |
 | D1 | D | Standard-library Python runtime, uv, pytest dev, setuptools console entry | selected for small local build; implementation detail |
 | D2 | D | External per-user store; no public runtime exporter | selected to enforce private evidence boundary |
 | D3 | D | Project-local Codex skills; monitor targets through explicit run paths | selected to avoid installer/catalog dependencies in v0 |

@@ -1,97 +1,61 @@
-# Build handoff: Agent Advocate v0
+# Build handoff: Agent Advocate after Step 1
 
-**Step 1 remains blocked after a qualified Codex review, 2026-09-23.** Skill Mesh
-main `110d916` records the installed route's authenticated `ADVANCE`, six passing
-lenses, and all 129 installed files matching its ledger and frozen manifest. This
-consumer session also passed its capability preflight. The route is no longer the
-blocker.
+**Step 1 is accepted under the operator-approved P10 closing exception.** The
+implementation is code commit `27e1ce1`; the [acceptance receipt](step-1-closure.md)
+records the reused Windows suite, actual Linux FIFO test and independent closing
+review. The old deep `NEEDS-WORK` and authenticated `BLOCKED` records remain
+historical evidence, not the current acceptance decision. Do not restart Step 1.
 
-The preserved implementation was committed at `0dbc4ee`, reconciled with current
-main at `b78da79`, then reviewed. Iteration 4 returned three security Blocks. The
-single authorized fifth developer pass repaired those items in `e4a9d6d`; the full
-suite passed 29 tests in 46.45 seconds and `git diff --check` passed. Round 5 still
-returned canonical `NEEDS-WORK`:
+Steps 2 (five skills), 3 (foreground watchdog) and M1 (live acceptance) remain TODO.
+This closing session ends at Step 1; the operator owns the next project work.
 
-- `src/agent_advocate/service.py:568`: on POSIX, opening an in-project FIFO can
-  block before `fstat` classifies it as non-regular. Add `O_NONBLOCK` to the POSIX
-  evidence open and cover FIFO rejection.
-- `src/agent_advocate/service.py:692-694`: correctness and bugs reviewers treated
-  the 8 MiB + one-byte growth sentinel as violating the code comment's exact 8 MiB
-  read wording. The coordinator disputes Block severity because work remains
-  strictly bounded, the extra byte is neither hashed nor captured, and the plan
-  requires bounded ingestion rather than an exact physical-read cap. Preserve the
-  raw verdict; resolve the policy/wording before changing behavior.
+## Resume the remaining work
 
-No sixth repair/review round is authorized. Candidate `e4a9d6d` remains preserved
-on `build-step-1-20260923`; Steps 2 and 3 therefore did not start, and M1 remains
-TODO. The original historical retry maximum is unknown. Preserve four earlier
-developer passes, three earlier completed reviews, two failed reviewer starts,
-iteration 4, and the fifth pass/review as separate history.
-
-The operator approved this v0 and public repository on 2026-09-22, then requested the recurring review-capability blocker be addressed first on 2026-09-23. Scope is settled in [plan.md](../plan.md); do not reopen routine stack, privacy, timer or host choices. Step 1 now has a preserved unmerged implementation and review history. This is a resume handoff, not a request to start it again.
-
-Build issues: [Step 1 — persistence](https://github.com/aberson/agent-advocate/issues/1), [Step 2 — skills](https://github.com/aberson/agent-advocate/issues/2), [Step 3 — watchdog](https://github.com/aberson/agent-advocate/issues/3). Separate live acceptance: [M1](https://github.com/aberson/agent-advocate/issues/4).
-
-## Start in this repository
-
-Verify the checkout identity and current state before acting:
+Verify current Git state and read the current project instructions and plan:
 
 ```powershell
 git rev-parse --show-toplevel
 git remote get-url origin
-git log --oneline -5
-git rev-parse HEAD
 git status --short
-git worktree list
+git log --oneline -5
 ```
 
-Expected remote: `https://github.com/aberson/agent-advocate.git` (an SSH equivalent is also valid). Read `AGENTS.md`, `CLAUDE.md`, `plan.md` and the latest plan-review/plan-wrap reports. Reconcile any work that landed after this handoff with Git and issue state; do not overwrite another session or restart a completed step.
-
-## Qualified review prerequisite
-
-The installed `review-deep` adapter and helpers are qualified for this host/session shape. The owning history remains in the amended [Skill Mesh Phase CD plan](https://github.com/aberson/skill-mesh/blob/main/documentation/codex-deep-review-unblock-plan.md), [#222](https://github.com/aberson/skill-mesh/issues/222) and [#223](https://github.com/aberson/skill-mesh/issues/223). Keep this project's deep review flags intact.
-
-That repair runs in the **Skill Mesh checkout**, using its own instructions and plan. It does not resume the rest of that repository's backlog. Do not hand-edit a generated consumer skill or add a project-local copy of the shared engine. A source change, a passing static test or an unactivated disposable install is not a working review route. Reuse a valid capability receipt only for the unchanged host/session/package; otherwise qualify the actual route.
-
-Do not rerun Skill Mesh qualification or its deferred root suite from this product.
-Recheck the consumer capability receipt only if the host, session, installed
-packages, or route changes.
-
-Reconcile issue #1 and the existing worktree's latest developer/reviewer receipts. Later Claude/Opus review rounds exist after the first blocked report. Preserve their candidate, unresolved findings and consumed retry budget; coordinate with the current builder before taking ownership. A qualified, separately authorized Claude route does not qualify Codex, and this handoff does not silently switch models or hosts.
-
-Once the required route is demonstrably available and build ownership is settled, resume in the **Agent Advocate checkout**:
+Expected remote: `https://github.com/aberson/agent-advocate.git`. Preserve any
+concurrent changes. The remaining host skill invocation is:
 
 ```text
-/build-phase --plan plan.md --steps 1,2,3 --resume 1
+/build-phase --plan plan.md --steps 2,3
 ```
 
-This is a host skill invocation, not a PowerShell executable. Resolve the installed `build-phase` skill through the host's available skill mechanism and follow it. Public contributors without that workflow can implement the same three steps directly from the canonical plan and linked issues; the Python product does not depend on that external workflow.
+This is a host skill invocation, not a PowerShell executable. Step 2 uses ordinary
+code review; Step 3 retains its required deep review. P10 is a completed exception
+for Step 1 and grants no standing waiver for another step. Set and record the
+remaining run's bounds before dispatch; do not reset or replay earlier attempts.
 
-The completed bounded attempt used a 90-minute phase allowance and at most five
-minutes of cumulative testing per step. Step 1 used 121.319 seconds of test time
-and stopped after the permitted fifth review; this handoff does not authorize a
-sixth round or reset either budget. On a later expressly resumed attempt, use
-candidate `e4a9d6d` and its completed round 5 findings above. Its full-suite receipt
-is 29 passing tests in 46.45 seconds; do not repeat the older iteration 4 review.
-Preserve all consumed rounds and the unknown original retry maximum. Any newly
-authorized cycle must name the remaining defect, chosen bound and changed inputs.
-Do not launch Skill Mesh's root suite from this consumer build or expand acceptance
-with optional reviewer preferences.
+The installed nested Codex route is qualified on the demonstrated collaboration
+host; [Skill Mesh's receipt](https://github.com/aberson/skill-mesh/blob/110d916/documentation/findings/codex-deep-review-bounded-resumption-2026-09-23.md)
+records the proof and its limits. A fresh session checks its actual required
+capabilities. It does not rerun Skill Mesh qualification or the deferred Skill Mesh
+root suite, and it does not hand-edit generated skills.
 
-## Deliver the approved behavior
+## Preserve the scope and evidence
 
-1. Persist an advocated run, checkpoints, evidence and cautions using a private SQLite store and a real CLI.
-2. Add the five project-owned Codex skills: `assign-advocate`, `status-inquisition`, `coordination-cowbell`, `model-mother`, `advocate-wrap`. Before assignment, compare required gates with loaded adapters, packaged helpers and actual host capabilities, recording available/unavailable/unknown through existing observations. Use actual native agents and web tools when invoked; record unavailable capability honestly.
-3. Add the configurable 60-second foreground watcher with persistent, deduplicated overdue alerts and the exact live acceptance procedure.
+Step 1 supplies the CLI, private SQLite store and lifecycle records. Step 2 supplies
+five project-local skills using existing native agent/web tools. Step 3 supplies
+the deterministic timer and the exact live acceptance procedure. Runtime storage
+and detailed evidence stay outside public Git. No dashboard, daemon, model client,
+shared skill installer or workflow redesign is part of these steps.
 
-Keep the timer deterministic: it does not launch models or stop builds. The advocate advises; the coordinator retains authority over work. Run records and evidence stay outside Git. The shared prerequisite repair above is separate from this product's three code steps. No dashboard, daemon, API client, automatic model routing or duplicate skill installer belongs to this product.
+Use focused checks during a named repair and the project suite at completion.
+Reuse a completed integrated-state receipt while source, tests, dependencies,
+configuration and generated inputs are unchanged. Optional reviewer preferences
+must not expand acceptance or start an unlimited cycle.
 
-Step 1's original baseline had no runtime suite; its preserved candidate now has package, lock and tests. Read their current state and run the appropriate actual gate rather than re-creating the project or reporting the old baseline as current. Steps 1 and 3 use deep review for persistence and timer boundaries; Step 2 uses ordinary code review. Use the preserved isolated worktree and declared workflow.
+After Steps 2 and 3, hand off **Please run M1 next**. A fresh Codex session must
+actually exercise the skills, independent assessment, public-source research and
+watcher behavior. Code tests do not establish that live acceptance.
 
-Complete each step's observable acceptance. Use the narrowest useful checks while fixing a defect and the full project suite at completion. Cite an already completed integrated-state run only when source, tests, dependencies, configuration and generated inputs are unchanged. Do not expand acceptance for optional reviewer preferences, test-count growth or imagined future architecture. Repeated repair attempts should trigger the existing workflow's diagnosis path, preserving its authorized retry budget.
-
-## Finish the code span, then observe
-
-After Steps 1-3, report changed behavior, real validation receipts, merged commits, issue/status updates and remaining limitations. Hand off **Please run M1 next** with `documentation/acceptance.md`. M1 uses a fresh Codex session to demonstrate all five skills, real independent assessment, real public-source research, and the timer across two normal intervals plus a short overdue case. Mechanical tests alone cannot mark it complete.
-
-Use existing useful work for acceptance; do not invent a benchmark project. Demonstrate the early capability check on a real route and one clearly synthetic unavailable-adapter example. Keep detailed receipts private while publishing sanitized outcomes. Once v0 is accepted, use it during separately selected v1 work, then resume the broader separately approved Skill Mesh improvements. That later work is not authorized by this handoff alone.
+Issues: [Step 1](https://github.com/aberson/agent-advocate/issues/1),
+[Step 2](https://github.com/aberson/agent-advocate/issues/2),
+[Step 3](https://github.com/aberson/agent-advocate/issues/3),
+[M1](https://github.com/aberson/agent-advocate/issues/4).

@@ -13,13 +13,12 @@ Agent Advocate gives a coding coordinator an independent, evidence-based second 
 
 ## Commands
 
-The implementation is not present yet. Step 1 creates these commands; do not report them as available before it lands.
+This worktree includes the Step 1 CLI and private store. The watchdog command remains Step 3 work and must not be reported as available until that step lands.
 
 ```powershell
 uv sync --locked
 uv run --locked agent-advocate --help
 uv run --locked python -m pytest
-uv run --locked agent-advocate watch RUN_ID --interval 60
 ```
 
 During Step 1, create the declared environment and lock with `uv sync`, then use `--locked`. There is no configured lint/typecheck command. `git diff --check` checks whitespace; do not invent a lint or typecheck result.
@@ -38,18 +37,13 @@ Keep requested model identity separate from observed identity. Missing identity 
 
 ## Development process
 
-Before resuming, resolve the selected workflow's required review capability as plan.md section 11 specifies. Its shared adapter repair belongs to Skill Mesh Phase CD; preserve this project's existing Step 1 candidate and review history. Then complete the three v0 code steps and the separate live acceptance step. Use focused tests while iterating and the full project suite at completion. A completed integrated-state suite may be cited by its immediately enclosing checkpoint when source, tests, dependencies, configuration, and generated inputs are unchanged; otherwise rerun. This applies the approved duplicate-validation remedy locally and does not change any other project's gates.
+Build only the three v0 code steps in plan.md, then the separate live acceptance step. Use focused tests while iterating and the full project suite at completion. A completed integrated-state suite may be cited by its immediately enclosing checkpoint when the tested source, tests, dependencies, configuration, and generated inputs are unchanged; otherwise rerun. This applies the approved duplicate-validation remedy locally and does not change any other project's gates.
 
 Require meaningful behavior tests and a real short watchdog observation; do not require increasing test counts or a multi-hour soak. Independently review code changes and the live skill evidence. Repeated repairs should trigger diagnosis under the existing build workflow, preserving its authorized retry budget. Keep reviews tied to defects and acceptance; optional improvements do not expand v0.
 
-The next Steps 1-3 resume uses plan.md section 11's enclosing 90-minute limit and
-five-minute cumulative test budget per step. Start with independent review of the
-preserved Step 1 iteration 4 candidate. Preserve retry history; do not reset it or
-re-run unchanged checks automatically. Reaching a bound means checkpoint and stop.
-
 ## Current state
 
-Main contains the plan and scaffold. Step 1 is blocked with an unmerged implementation and review receipts preserved in its worktree; do not discard or recreate them. Product skill execution and live acceptance remain unproven. Current step status is owned by plan.md; reconcile the actual candidate and issue history before resume.
+Step 1 implements the local CLI, version-1 SQLite store, lifecycle records and focused runtime tests. The five skills, watchdog and live acceptance remain unimplemented here; no skill execution or live acceptance is claimed. Step status and completion evidence are owned by plan.md.
 
 ## Environment requirements
 
