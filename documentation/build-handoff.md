@@ -1,5 +1,7 @@
 # Build handoff: Agent Advocate v0
 
+**Paused by the operator on 2026-09-23.** The shared Skill Mesh repair was implemented and independently reviewed, but its full test run was stopped before completion because validation was taking too long. The reviewed candidate is preserved on [paused/cd155-operator-stop-20260923](https://github.com/aberson/skill-mesh/tree/paused/cd155-operator-stop-20260923). Installed-host qualification and profile refresh have not run. Agent Advocate's existing candidate remains preserved. Resume only when the operator asks to continue; this handoff does not authorize an automatic test or build restart.
+
 The operator approved this v0 and public repository on 2026-09-22, then requested the recurring review-capability blocker be addressed first on 2026-09-23. Scope is settled in [plan.md](../plan.md); do not reopen routine stack, privacy, timer or host choices. Step 1 now has a preserved unmerged implementation and review history. This is a resume handoff, not a request to start it again.
 
 Build issues: [Step 1 — persistence](https://github.com/aberson/agent-advocate/issues/1), [Step 2 — skills](https://github.com/aberson/agent-advocate/issues/2), [Step 3 — watchdog](https://github.com/aberson/agent-advocate/issues/3). Separate live acceptance: [M1](https://github.com/aberson/agent-advocate/issues/4).
