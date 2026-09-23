@@ -209,7 +209,7 @@ Before Step 1, no runtime suite exists: record the baseline as **not yet created
 
 - **Problem:** A coordinator needs one durable place to register work, checkpoints, observations and cautions without exposing private evidence.
 - **Type:** code
-- **Status:** TODO
+- **Status:** BLOCKED (2026-09-23)
 - **Issue:** #1
 - **Flags:** --reviewers deep --isolation worktree
 - **Files:** `pyproject.toml`; `uv.lock`; `src/agent_advocate/__init__.py`; `src/agent_advocate/cli.py`; `src/agent_advocate/store.py`; `src/agent_advocate/service.py`; `tests/test_store.py`; `tests/test_cli.py`; `tests/test_privacy.py`; `README.md`; `CLAUDE.md`; `plan.md` (status/evidence only).
