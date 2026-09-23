@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Agent Advocate — approved v0 proposal</title>
+<style>
+:root{color-scheme:light dark;--bg:#f6f5f0;--paper:#fff;--ink:#203029;--muted:#52655b;--line:#cbd6ce;--accent:#216e54;--tint:#e8f2ec;--code:#f0f2ee}
+@media(prefers-color-scheme:dark){:root{--bg:#111a16;--paper:#19251f;--ink:#edf3ef;--muted:#b7c9be;--line:#40564a;--accent:#90d5af;--tint:#233e30;--code:#24362c}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.6 system-ui,-apple-system,"Segoe UI",sans-serif}main{max-width:1040px;margin:auto;padding:48px 28px 72px}header{border-top:7px solid var(--accent);padding:24px 0}h1{font-size:clamp(2.3rem,5vw,3.5rem);line-height:1.1;letter-spacing:-.03em;margin:12px 0}h2{font-size:1.45rem;margin:36px 0 12px}h3{font-size:1.08rem;margin:0 0 8px}p{margin:8px 0 16px}a{color:var(--accent);text-underline-offset:3px}.eyebrow{font-weight:700;letter-spacing:.08em;text-transform:uppercase;font-size:.78rem;color:var(--accent)}.lead{font-size:1.17rem;max-width:800px}.meta,small{color:var(--muted)}.card,.callout{border:1px solid var(--line);border-radius:10px;padding:20px;background:var(--paper);break-inside:avoid}.callout{background:var(--tint)}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(265px,1fr));gap:14px}.tag{font-size:.78rem;font-weight:700;color:var(--accent)}table{width:100%;border-collapse:collapse;background:var(--paper);margin:12px 0 20px}th,td{text-align:left;vertical-align:top;padding:12px;border:1px solid var(--line)}th{background:var(--tint)}tr{break-inside:avoid}code{font-size:.88em;background:var(--code);padding:2px 5px;border-radius:4px;overflow-wrap:anywhere}ol,ul{padding-left:22px}li{margin:7px 0}.timeline{counter-reset:step;list-style:none;padding:0;display:grid;gap:12px}.timeline li{margin:0}.after{border-left:3px solid var(--accent);padding-left:16px;margin:16px 0}footer{border-top:1px solid var(--line);margin-top:32px;padding-top:16px;font-size:.92rem}
+@page{margin:14mm}
+@media print{:root,[data-theme=light],[data-theme=dark]{color-scheme:light;--bg:#fff;--paper:#fff;--ink:#203029;--muted:#52655b;--line:#cbd6ce;--accent:#216e54;--tint:#e8f2ec;--code:#f0f2ee}*{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}body{font-size:10pt}main{max-width:none;margin:0;padding:0}h1{font-size:28pt}h1,h2,h3{break-after:avoid}thead{display:table-header-group}.grid{display:block}.card{margin-bottom:10px}.card,.callout,tr{break-inside:avoid}a{text-decoration:none}header{padding-top:12px}section{overflow:visible;position:static}}
+</style>
+</head>
+<body><main>
+<header>
+<div class="eyebrow">Approved scope · Publication 1 · 2026-09-23 UTC</div>
+<h1>Agent Advocate</h1>
+<p class="lead">An evidence-based second view that helps a coding coordinator notice delivery problems, choose a useful response, and retain the lessons that still matter.</p>
+<p class="meta">v0: five skills, a private SQLite store, and a simple timer. Planning complete; implementation remains to be built.</p>
+</header>
+<section aria-labelledby="heard"><h2 id="heard">What I heard</h2>
+<p>Builds can spend too long expanding scope, repeating checks, or cycling through reviews. The coordinator needs timely evidence and informed advice before work, at normal checkpoints, and after the outcome is known.</p>
+<p>The approved direction is to build a useful v0 quickly, use it during selected v1 work, and then resume the separately approved Skill Mesh improvements. Existing useful work supplies the live example; no benchmark project is required.</p>
+</section>
+<section aria-labelledby="shape"><h2 id="shape">Why this shape</h2>
+<div class="grid">
+<article class="card"><h3>Before work</h3><p><code>assign-advocate</code> captures observable acceptance and time expectations, retrieves relevant cautions, and obtains an actual independent assessment.</p></article>
+<article class="card"><h3>At checkpoints</h3><p><code>status-inquisition</code> checks progress neutrally. <code>coordination-cowbell</code> investigates a suspected problem. A missed expectation signals overdue visibility, not proof of failure.</p></article>
+<article class="card"><h3>After work</h3><p><code>advocate-wrap</code> records the outcome, identifies the owning component, and retires obsolete cautions. <code>model-mother</code> deliberately refreshes dated, scoped model guidance.</p></article>
+</div>
+<p class="callout">The timer checks deadlines every 60 seconds by default. It records deduplicated alerts in a visible watch terminal. Model-assisted diagnosis happens when a skill is invoked; the timer never launches models or stops builds.</p>
+</section>
+<section aria-labelledby="timeline"><h2 id="timeline">Build timeline</h2>
+<ol class="timeline">
+<li class="card"><h3>Step 1 · Durable run and evidence</h3><p>Build the Python CLI and SQLite lifecycle. Prove persistence with fresh processes, retry identity, bounded concurrent writes, and the external private-store boundary.</p><small>Produces a usable local utility. Deep review targets the persistent schema.</small></li>
+<li class="card"><h3>Step 2 · Five working skill packages</h3><p>Add project-local Codex packages, shared instructions, public-source cautions, and relevant-pattern retrieval. Prove package structure and helper behavior; native execution is observed in M1.</p><small>Uses ordinary code review. No Skill Mesh installation is a dependency.</small></li>
+<li class="card"><h3>Step 3 · Timer and alerts</h3><p>Add the foreground watchdog, persistent deduplication, snooze/acknowledgment, pause/resume, and an exact acceptance runbook. Prove the watcher/store boundary using a short real process test.</p><small>Deep review targets timer/persistence behavior. No long soak is required.</small></li>
+<li class="card"><h3>M1 · Live acceptance</h3><p>In a fresh Codex session, observe all five skills, actual independent assessment and web research, persisted observations, and the watcher across two normal intervals plus a short overdue case.</p><small>Observed product behavior qualifies v0; long-term productivity benefit remains unproven.</small></li>
+</ol>
+<div class="after"><h3>Afterwards</h3><p>Start the build from this repository with <code>/build-phase --plan plan.md --steps 1,2,3</code>. After those code steps, run the prepared M1 procedure. The build handoff contains the full context and stop point.</p><p>Once implemented: <code>uv sync --locked</code>, then <code>uv run --locked agent-advocate init</code>. Invoke <code>$assign-advocate</code> in Codex and use its returned run UUID with <code>agent-advocate watch</code>.</p></div>
+</section>
+<section aria-labelledby="operator"><h2 id="operator">Operator choices</h2>
+<table><thead><tr><th>ID</th><th>Approved choice</th></tr></thead><tbody>
+<tr id="P1"><td>P1</td><td>Before-work, checkpoint, and after-work advocacy.</td></tr>
+<tr id="P2"><td>P2</td><td>The five named skills, including <code>advocate-wrap</code>.</td></tr>
+<tr id="P3"><td>P3</td><td>SQLite and a configurable 60-second timer in v0.</td></tr>
+<tr id="P4"><td>P4</td><td>Codex first; invoked skills perform model-assisted diagnosis.</td></tr>
+<tr id="P5"><td>P5</td><td>v0, then selected v1 work using the advocate, then Skill Mesh work.</td></tr>
+<tr id="P6"><td>P6</td><td>Public repository; runtime data may remain private.</td></tr>
+<tr id="P7"><td>P7</td><td>Previously accepted workflow/effort remedies remain future Skill Mesh work.</td></tr>
+</tbody></table>
+</section>
+<section aria-labelledby="defaults"><h2 id="defaults">Agent defaults</h2>
+<p>These implementation details fit the approved scope. They do not require another approval round.</p>
+<div class="grid">
+<article class="card" id="D1"><span class="tag">D1 · Stack</span><h3>Standard-library Python</h3><p><strong>What:</strong> Python 3.12+, uv, pytest for development, setuptools packaging.</p><p><strong>Why:</strong> Built-in SQLite and process tools cover the utility without runtime dependencies.</p><p><strong>Tweak:</strong> Introduce a dependency only for a concrete unmet requirement.</p></article>
+<article class="card" id="D2"><span class="tag">D2 · Privacy</span><h3>External per-user store</h3><p><strong>What:</strong> Keep database and evidence outside Git; no public runtime exporter.</p><p><strong>Why:</strong> A public codebase must not accidentally publish private run records.</p><p><strong>Tweak:</strong> Override the local data directory; keep the Git-tree refusal.</p></article>
+<article class="card" id="D3"><span class="tag">D3 · Discovery</span><h3>Project-local Codex skills</h3><p><strong>What:</strong> Discover skills from this checkout and explicitly name monitored project paths.</p><p><strong>Why:</strong> Start using v0 without an installer or external catalog dependency.</p><p><strong>Tweak:</strong> Qualify broader installation and Claude support in later work.</p></article>
+<article class="card" id="D4"><span class="tag">D4 · Delivery</span><h3>Three code slices and one observation</h3><p><strong>What:</strong> Persistence, skills, watchdog, then M1.</p><p><strong>Why:</strong> Each slice has concrete acceptance; live host behavior is observed separately.</p><p><strong>Tweak:</strong> Split only if implementation exposes a real dependency or scope problem.</p></article>
+<article class="card" id="D5"><span class="tag">D5 · Monitoring</span><h3>Explicit checkpoints</h3><p><strong>What:</strong> Skills submit progress; the timer raises deterministic advisory alerts.</p><p><strong>Why:</strong> Avoid guessing activity from transcripts or paying for a model every poll.</p><p><strong>Tweak:</strong> Add automatic diagnostic dispatch only after useful real evidence supports it.</p></article>
+<article class="card" id="D6"><span class="tag">D6 · Context</span><h3>Five relevant cautions at most</h3><p><strong>What:</strong> Retrieve applicable active patterns, retaining hypothesis labels.</p><p><strong>Why:</strong> Historical advice should not overwhelm the actual task.</p><p><strong>Tweak:</strong> Adjust the retrieval limit and ranking after observed use.</p></article>
+</div>
+</section>
+<section aria-labelledby="deferred"><h2 id="deferred">Deferred beyond v0</h2>
+<p>Claude qualification, automatic timer-to-diagnostic dispatch, richer test/review receipt ingestion, Switchboard inventory reads, an optional observatory summary, and wider skill installation are v1 candidates. A dashboard, new model API client, automatic fixer, and multi-hour productivity study are outside this v0.</p>
+</section>
+<section aria-labelledby="risks"><h2 id="risks">Risks and limits</h2>
+<ul>
+<li>Checkpoint claims can be wrong. Independent assessments need primary evidence and actual provenance.</li>
+<li>Overdue visibility can mean legitimate waiting. Alerts preserve state, reason and uncertainty.</li>
+<li>Local storage is not encryption or a promise of offline model reasoning. The active host's account policies still apply.</li>
+<li>A saved alert can go unprinted if a process crashes at the output boundary. Startup/status exposes unresolved alerts.</li>
+<li>A host may lack agents or web tools. Record unavailable capability; do not mark live acceptance complete.</li>
+<li>A correction applied is not proof of benefit. Wrap preserves that distinction and retires unhelpful cautions.</li>
+</ul>
+</section>
+<footer><h2 id="feedback">Feedback and sources</h2>
+<p>Stable decision grammar: <code>D6 -&gt; retrieve at most three cautions</code>, <code>D3 -&gt; explain the checkout requirement</code>, or <code>P3 -&gt; proposed change with reason</code>. Accepted changes update the canonical plan first; this file is its review surface. Approval is already recorded.</p>
+<p>Sources: <a href="../plan.md">plan.md</a> · <a href="plan-review.md">plan-review.md</a> · <a href="build-handoff.md">build-handoff.md</a> · <a href="privacy.md">privacy.md</a>. Open this standalone file in a browser; Print → Save as PDF uses the light print layout.</p>
+</footer>
+</main></body></html>

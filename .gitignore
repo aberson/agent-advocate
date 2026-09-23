@@ -1,0 +1,33 @@
+# Runtime state is private and normally lives outside this repository.
+*.db
+*.db-*
+*.sqlite
+*.sqlite-*
+*.sqlite3
+*.sqlite3-*
+private/
+reports/private/
+.agent-advocate/
+.env
+.env.*
+!.env.example
+*.log
+
+# Python and build outputs
+.venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+build/
+dist/
+
+# Local agent state and isolated worktrees
+.build-step/
+.claude/task-state/
+.claude/settings.local.json
+.claude/worktrees/
+.worktrees/
+.plan-expedite-state*
