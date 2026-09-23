@@ -13,13 +13,12 @@ Agent Advocate gives a coding coordinator an independent, evidence-based second 
 
 ## Commands
 
-The implementation is not present yet. Step 1 creates these commands; do not report them as available before it lands.
+This worktree includes the Step 1 CLI and private store. The watchdog command remains Step 3 work and must not be reported as available until that step lands.
 
 ```powershell
 uv sync --locked
 uv run --locked agent-advocate --help
 uv run --locked python -m pytest
-uv run --locked agent-advocate watch RUN_ID --interval 60
 ```
 
 During Step 1, create the declared environment and lock with `uv sync`, then use `--locked`. There is no configured lint/typecheck command. `git diff --check` checks whitespace; do not invent a lint or typecheck result.
@@ -44,7 +43,7 @@ Require meaningful behavior tests and a real short watchdog observation; do not 
 
 ## Current state
 
-Planning and public repository setup only. No v0 implementation, runtime tests, skill execution, or live acceptance is claimed. Step status is owned by plan.md.
+Step 1 implements the local CLI, version-1 SQLite store, lifecycle records and focused runtime tests. The five skills, watchdog and live acceptance remain unimplemented here; no skill execution or live acceptance is claimed. Step status and completion evidence are owned by plan.md.
 
 ## Environment requirements
 

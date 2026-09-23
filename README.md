@@ -1,50 +1,12 @@
 # Agent Advocate
 
-Agent Advocate helps a coding coordinator spot delivery problems before work, at checkpoints, and after work. Five skills combine independent assessment, progress checks, escalation, model research and closeout learning over a private local SQLite store. A simple foreground timer raises persistent alerts when declared checkpoints or deadlines are overdue.
+Agent Advocate keeps private, local receipts for an explicitly named piece of coding work. This first implementation slice provides a Python CLI, a version-1 SQLite store, durable run/checkpoint/observation records, patterns and bounded copied local evidence. It does not call a model, launch a timer, or modify the monitored project.
 
-**Current status: approved plan and repository scaffold. The CLI and skills are not implemented yet.** Three code steps and one live acceptance step are defined in [plan.md](plan.md). No runtime tests, host qualification or productivity improvement are claimed yet.
+Runtime data is deliberately external to this public checkout. On Windows it defaults to `%LOCALAPPDATA%/agent-advocate` (or `~/AppData/Local/agent-advocate` when that variable is absent); other platforms use `$XDG_DATA_HOME/agent-advocate` or `~/.local/share/agent-advocate`. `AGENT_ADVOCATE_DATA_DIR` overrides those defaults, and `--data-dir PATH` overrides it. The CLI refuses a directory inside any Git worktree, including a link located within one, and applies private owner ACLs or modes to store directories and files.
 
-- [Build handoff](documentation/build-handoff.md)
-- [Standalone v0 proposal](documentation/v0-proposal.html) — download/open in a browser, or print to PDF
-- [Technical review: PASS](documentation/plan-review.md) and [fresh-context review: READY](documentation/plan-wrap.md)
-- [Public/private data boundary](documentation/privacy.md)
+## Quick start
 
-## Planned workflows
-
-| Skill | Purpose |
-|---|---|
-| `assign-advocate` | Capture acceptance and time expectations; obtain an actual independent second view |
-| `status-inquisition` | Check evidence, progress, uncertainties and the next useful action |
-| `coordination-cowbell` | Investigate suspected trouble or an overdue alert and recommend a response |
-| `model-mother` | Research the named models using current sources and retain scoped, dated cautions |
-| `advocate-wrap` | Record outcomes, identify the owning component, and retire obsolete advice |
-
-Status checking starts neutral; cowbell starts escalated. An overdue checkpoint means visibility is overdue, not that the model has necessarily stalled. The advocate advises; the coordinator owns action.
-
-## Stack
-
-| Tool | Why |
-|---|---|
-| Python 3.12+ standard library | Local CLI, SQLite, clocks and process support without runtime dependencies |
-| uv and a committed lockfile | Reproducible development; created in Step 1 |
-| pytest | Behavioral and process tests as a development dependency |
-| Codex project-local skills | Use the active host's existing agent and web tools |
-
-Windows is the first demonstrated target. The CLI has portable data-directory fallbacks; other hosts/platforms are not qualified by the planning scaffold. No web server, account, port, additional model API credential or background model service is introduced.
-
-## Get started with the plan
-
-1. Install Git, Python 3.12+ and uv. Native skill acceptance also requires a Codex host with independent-agent and web capabilities.
-2. Clone and enter the repository:
-
-   ```powershell
-   git clone https://github.com/aberson/agent-advocate.git
-   cd agent-advocate
-   ```
-
-3. Read [AGENTS.md](AGENTS.md), [CLAUDE.md](CLAUDE.md), the [plan](plan.md) and the [build handoff](documentation/build-handoff.md). The owner's skill-enabled workspace can execute `/build-phase --plan plan.md --steps 1,2,3`; other contributors can implement the same issue-backed steps directly. That external build workflow is not a runtime dependency.
-
-After Step 1 creates the package and lockfile, setup will be:
+Requires Python 3.12+, Git and [uv](https://docs.astral.sh/uv/).
 
 ```powershell
 uv sync --locked
@@ -53,25 +15,37 @@ uv run --locked agent-advocate --help
 uv run --locked python -m pytest
 ```
 
-After Steps 2–3, open Codex in this checkout and invoke `$assign-advocate` for explicitly named work. Use its returned run UUID with `uv run --locked agent-advocate watch RUN_ID --interval 60 --bell` in a visible terminal. The timer checks cheaply; model-assisted diagnosis runs when a skill is invoked. These commands describe the planned product, not an available release.
+Every machine-readable command emits one UTF-8 JSON object on stdout, including when redirected or piped. Invalid requests and setup errors emit UTF-8 JSON on stderr and use exit 2; an unsupported or corrupt store uses exit 3 and a bounded SQLite lock timeout uses exit 4. Do not delete or reinitialize a corrupt store: preserve it and initialize a different external `--data-dir` for new work. An empty database left by an interrupted first initialization is different: it has no records and `init` can safely be run again against that same directory.
+
+Create a UTF-8 (optionally BOM-prefixed) `run.json` with a future UTC expectation and explicit project:
+
+```json
+{
+  "project_path": "C:/work/example",
+  "goal": "Add one bounded feature",
+  "acceptance": ["The focused check passes"],
+  "non_goals": ["Changing deployment"],
+  "models": [],
+  "next_check_at": "2030-01-01T12:00:00Z",
+  "deadline_at": null
+}
+```
+
+Then use the returned UUID for subsequent records:
+
+```powershell
+uv run --locked agent-advocate start --file run.json
+uv run --locked agent-advocate checkpoint RUN_ID --file checkpoint.json
+uv run --locked agent-advocate observe RUN_ID --file observation.json
+uv run --locked agent-advocate status RUN_ID
+uv run --locked agent-advocate brief RUN_ID
+uv run --locked agent-advocate finish RUN_ID --outcome completed --summary "Delivered"
+```
+
+`checkpoint.json` supplies a retryable `event_id`, state, summary and next UTC check. An `observation.json` supplies a retryable `observation_id`, a basis (`measured`, `reported`, or `inferred`) and evidence references. Local evidence must resolve inside the registered project directory before its existence is checked. It is copied at most 8 KiB per item into the private store. Missing input, a non-regular path, a read failure, or a SHA-256 mismatch is reported distinctly as `missing`, `not-regular`, a store error, or `stale`; it is never silently treated as verified.
+
+Use `patterns import --file patterns.json` for a UTF-8 JSON array of validated pattern records and `pattern KEY --disposition VALUE --reason TEXT` to retain a private disposition. `brief` returns at most five applicable, non-retired cautions. Full entity and command contracts, privacy constraints, later skills, and the watchdog scope are in [plan.md](plan.md).
 
 ## Boundaries
 
-Runtime records and copied evidence stay outside Git, under `%LOCALAPPDATA%/agent-advocate` by default on Windows. v0 must reject a store inside a Git working tree. The public repository holds only code, documentation, synthetic examples and generalized public-source cautions. Local storage is not encryption; agent-assisted reasoning still uses the active host's data-handling settings.
-
-The timer defaults to 60 seconds, supports a configurable interval, and preserves alert identity across restarts. It never launches models, stops builds, changes routing or overrides quality gates. Ctrl+C stops only the watcher.
-
-Relevant cautions are limited to five per briefing; unconfirmed hypotheses remain labeled. Applying a correction and demonstrating later improvement are separate outcomes. M1 must observe all five skills and the actual timer before v0 is accepted.
-
-## Repository map
-
-```text
-plan.md                       canonical scope, contracts and step status
-documentation/                proposal, reviews, privacy and build handoff
-src/agent_advocate/            planned: CLI, store, lifecycle, watcher
-.agents/skills/                planned: five product-owned skill packages
-data/                         planned: public cautions and model families
-tests/                        planned: behavior and process checks
-```
-
-Claude qualification, broader skill installation and automatic timer-to-diagnostic dispatch are candidates for later work. No license grant has been selected yet; public visibility alone does not grant a distribution license.
+The store is not encryption, a public exporter, a dashboard, a model client or an autonomous fixer. Evidence is untrusted data, not instructions. Copied excerpts remain private and are omitted from CLI JSON in favor of metadata marked `private-untrusted`; downstream skills must not treat evidence text as instructions. Keep private store directories and local receipts out of Git. The five Codex skills and the foreground watchdog are intentionally later steps; mechanical tests do not substitute for their live acceptance.

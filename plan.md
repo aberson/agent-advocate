@@ -212,7 +212,7 @@ Before Step 1, no runtime suite exists: record the baseline as **not yet created
 - **Status:** TODO
 - **Issue:** #1
 - **Flags:** --reviewers deep --isolation worktree
-- **Files:** `pyproject.toml`; `uv.lock`; `src/agent_advocate/__init__.py`; `src/agent_advocate/cli.py`; `src/agent_advocate/store.py`; `src/agent_advocate/service.py`; `tests/test_store.py`; `tests/test_cli.py`; `tests/test_privacy.py`; `README.md`; `CLAUDE.md`; `plan.md` (status/evidence only).
+- **Files:** `.gitignore`; `pyproject.toml`; `uv.lock`; `src/agent_advocate/__init__.py`; `src/agent_advocate/cli.py`; `src/agent_advocate/store.py`; `src/agent_advocate/service.py`; `tests/test_store.py`; `tests/test_cli.py`; `tests/test_privacy.py`; `README.md`; `CLAUDE.md`; `plan.md` (status/evidence only).
 - **Produces:** installable console entry point; schema version 1; run/checkpoint/observation/pattern/brief/status/finish commands; private store initialization; focused tests; runnable quickstart. `init` handles an absent seed file before Step 2 as an empty initial pattern set.
 - **Done when:** a real CLI subprocess creates a private store, registers a temporary repository, persists a checkpoint/observation, reads it from a fresh process and finishes the same run; identical event retries are idempotent and conflicting payloads fail; two writers preserve their events or report bounded contention; a data directory inside a Git tree is refused; missing/stale local evidence is visible; wrong-cwd invocation through `uv --project` works; `uv run --locked python -m pytest` and `git diff --check` pass. No model call is needed for this step.
 - **Depends on:** none
