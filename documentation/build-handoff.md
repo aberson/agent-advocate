@@ -67,15 +67,16 @@ Once the required route is demonstrably available and build ownership is settled
 
 This is a host skill invocation, not a PowerShell executable. Resolve the installed `build-phase` skill through the host's available skill mechanism and follow it. Public contributors without that workflow can implement the same three steps directly from the canonical plan and linked issues; the Python product does not depend on that external workflow.
 
-Apply plan.md section 11's bounded resume defaults: 90 minutes total for this
-invocation, at most five minutes of cumulative testing per step, and checkpoint
-then stop on either bound. These are coordinator-selected limits responding to
-the operator's testing-overrun concern, not promised completion times. Reconcile
-and independently review the preserved iteration 4 candidate first; its latest
-developer receipt reports 26 tests passed in 34.70 seconds. Preserve the actual
-consumed rounds and resolved retry limit. A new cycle must address a named changed
-input or unresolved acceptance defect. Do not launch Skill Mesh's root suite from
-this consumer build or expand acceptance with optional reviewer preferences.
+The completed bounded attempt used a 90-minute phase allowance and at most five
+minutes of cumulative testing per step. Step 1 used 121.319 seconds of test time
+and stopped after the permitted fifth review; this handoff does not authorize a
+sixth round or reset either budget. On a later expressly resumed attempt, use
+candidate `e4a9d6d` and its completed round 5 findings above. Its full-suite receipt
+is 29 passing tests in 46.45 seconds; do not repeat the older iteration 4 review.
+Preserve all consumed rounds and the unknown original retry maximum. Any newly
+authorized cycle must name the remaining defect, chosen bound and changed inputs.
+Do not launch Skill Mesh's root suite from this consumer build or expand acceptance
+with optional reviewer preferences.
 
 ## Deliver the approved behavior
 
