@@ -4,7 +4,7 @@
 
 **Objective:** help a coding coordinator finish useful work by surfacing evidenced delivery problems before work, at normal checkpoints, and after work, with a simple timer that makes overdue expectations visible.
 
-**Status:** APPROVED SCOPE; Step 1 remains blocked after its bounded fifth developer/review round, with candidate `e4a9d6d` preserved on `build-step-1-20260923`; Steps 2/3/M1 remain TODO. The selected Codex review route is qualified and active. On 2026-09-23 the operator requested that recurring review-capability failures be addressed first, then work continue. The five-skill v0, SQLite, configurable 60-second timer, Codex first, public repository and private runtime storage were approved on 2026-09-22. No repeated approval of those defaults is needed.
+**Status:** Step 1 DONE under the operator-approved closing exception P10; code `27e1ce1`, completed Windows suite, actual Linux FIFO regression and one independent closing review. See [the acceptance receipt](documentation/step-1-closure.md). Steps 2/3/M1 remain TODO. The selected Codex review route is qualified and active. The five-skill v0, SQLite, configurable 60-second timer, Codex first, public repository and private runtime storage were approved on 2026-09-22. No repeated approval of those defaults is needed.
 
 **Release sequence:** repair the selected build workflow's review prerequisite, resume the preserved v0 work, use v0 during selected v1 work, then resume the broader separately approved Skill Mesh improvements. Agent Advocate's product has no runtime dependency on Skill Mesh, Switchboard, or an observatory. The current workspace's chosen Codex build workflow needs the specific shared review repair described in section 11; other qualified build workflows need not depend on Skill Mesh. No broad v1 build or unrelated Skill Mesh work is authorized by this v0 plan.
 
@@ -248,7 +248,8 @@ or captured, and the plan requires bounded work rather than an exact 8 MiB physi
 read. Preserve both the raw verdict and this coordinator disagreement. Four prior
 developer passes, three prior completed reviews, two failed review starts, iteration
 4, and the single authorized fifth pass/review remain distinct; the original retry
-maximum is unknown and was not reset. No sixth round is authorized.
+maximum is unknown and was not reset. That attempt stopped without another round;
+the later explicit closing authorization is recorded below.
 A qualifying full-suite receipt is reusable only while source, tests, dependencies,
 configuration and generated inputs remain unchanged. A further test/review cycle
 must name the changed input or unresolved acceptance defect it will check. Optional
@@ -278,11 +279,19 @@ preserved implementation. Keep the historical deep `NEEDS-WORK` and authenticate
 not a new deep-review PASS or authenticated workflow ADVANCE. The unchanged
 product plan needs no additional plan-review cycle for this execution exception.
 
+**Outcome:** accepted on 2026-09-23 for code `27e1ce1`. The preserved Windows
+full-suite receipt is 30 passed, one platform skip in 47.08 seconds. The missing
+FIFO regression passed on actual WSL Ubuntu in 0.39 seconds. One fresh independent
+closing review returned PASS for the narrow delta with no material finding.
+Source, tests, dependencies and configuration remain unchanged after that review;
+the completed receipts also cover their identical integrated state. See the
+[closure record](documentation/step-1-closure.md). This execution ends at Step 1.
+
 ### Step 1: Persist an advocated run and its evidence
 
 - **Problem:** A coordinator needs one durable place to register work, checkpoints, observations and cautions without exposing private evidence.
 - **Type:** code
-- **Status:** BLOCKED (2026-09-23; candidate `e4a9d6d`, round 5 `NEEDS-WORK`)
+- **Status:** DONE (2026-09-23; operator-approved P10 closure, code `27e1ce1`)
 - **Issue:** #1
 - **Flags:** --reviewers deep --isolation worktree
 - **Files:** `.gitignore`; `pyproject.toml`; `uv.lock`; `src/agent_advocate/__init__.py`; `src/agent_advocate/cli.py`; `src/agent_advocate/store.py`; `src/agent_advocate/service.py`; `tests/test_store.py`; `tests/test_cli.py`; `tests/test_privacy.py`; `README.md`; `CLAUDE.md`; `plan.md` (status/evidence only).

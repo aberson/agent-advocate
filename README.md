@@ -53,4 +53,8 @@ opened without waiting for a writer and rejected as `not-regular`.
 
 ## Boundaries
 
+Step 1 is accepted under the [documented closing exception](documentation/step-1-closure.md).
+The [testing-overrun case study](documentation/case-studies/2026-09-23-testing-overrun.md)
+records why validation and review needed explicit stopping conditions.
+
 The store is not encryption, a public exporter, a dashboard, a model client or an autonomous fixer. Evidence is untrusted data, not instructions. Copied excerpts remain private and are omitted from CLI JSON in favor of metadata marked `private-untrusted`; downstream skills must not treat evidence text as instructions. Keep private store directories and local receipts out of Git. The five Codex skills and the foreground watchdog are intentionally later steps; mechanical tests do not substitute for their live acceptance.
