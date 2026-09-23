@@ -215,6 +215,14 @@ The selected Codex workflow's installed `review-deep` adapter currently returns 
 
 Before resuming this build, use the above capability check manually from this plan (the product skills are still unbuilt). Keep Steps 1/3 on `--reviewers deep`. Qualify and load the corrected Codex route before dispatch; do not infer success from source edits or a disposable install alone. A separately authorized, demonstrably working Claude route remains distinct and does not qualify Codex. This narrow repair is the exception to the prior decision to defer broader Skill Mesh improvements.
 
+Latest prerequisite outcome: the reviewed source is accepted on Skill Mesh main
+under its one-candidate validation exception. The bounded installed proof stopped
+at a verifier launch without `tty: true`; it exited on closed stdin before native
+capability proof or any fixture build/review. The real profile remains unchanged.
+The next-attempt correction and remaining qualification are in the
+[build handoff](documentation/build-handoff.md). Do not mistake this invocation
+error for demonstrated host incapability or restart the interrupted root suite.
+
 Reconcile Git, issue #1, the existing Step 1 worktree and its latest review receipts before any restart. Work exists beyond the earlier "build did not start" report: later Claude/Opus reviews and repair passes are preserved. Preserve the implementation, unresolved findings, current owner and consumed retry rounds. Resume that candidate; do not create another Step 1 implementation, reset its budget, or overwrite an active builder. Record incomplete prerequisites honestly and stop only the dependent dispatch while unrelated authorized work can continue.
 
 The public repository is prepared through plan-review, plan-redline, plan-wrap and repo-init. The build handoff then runs the three code steps in order in isolated worktrees. Stakes-aware routing uses `--reviewers deep` for Step 1's persistent schema and Step 3's timer/store producer-consumer boundary; Step 2 uses `--reviewers code`. These are bounded reviews of the named step, not a Skill Mesh-wide review or a model-tier escalation. GitHub issues are derived from these steps; repository identity is checked before mutations.

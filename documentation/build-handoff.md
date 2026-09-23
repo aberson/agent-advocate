@@ -1,6 +1,14 @@
 # Build handoff: Agent Advocate v0
 
-**Paused by the operator on 2026-09-23.** The shared Skill Mesh repair was implemented and independently reviewed, but its full test run was stopped before completion because validation was taking too long. The reviewed candidate is preserved on [paused/cd155-operator-stop-20260923](https://github.com/aberson/skill-mesh/tree/paused/cd155-operator-stop-20260923). Installed-host qualification and profile refresh have not run. Agent Advocate's existing candidate remains preserved. Resume only when the operator asks to continue; this handoff does not authorize an automatic test or build restart.
+**Codex build route still blocked, 2026-09-23.** The reviewed shared repair is now
+on Skill Mesh main (`2e7f325`) under an explicit focused-validation exception; its
+101.7-minute interrupted full suite remains INCOMPLETE/deferred. One bounded
+installed attempt built and hash-checked a disposable profile, then stopped because
+the proof agent launched the verifier without `tty: true`: it exited on closed
+stdin, without a live writable session. No fixture build/reviews ran, and the real
+profile is unchanged. This was a launch mistake, not proof that the host cannot
+support the route. Services and the disposable tree are cleaned up. No automatic
+retry or Agent Advocate implementation starts from this closeout.
 
 The operator approved this v0 and public repository on 2026-09-22, then requested the recurring review-capability blocker be addressed first on 2026-09-23. Scope is settled in [plan.md](../plan.md); do not reopen routine stack, privacy, timer or host choices. Step 1 now has a preserved unmerged implementation and review history. This is a resume handoff, not a request to start it again.
 
@@ -26,6 +34,15 @@ Expected remote: `https://github.com/aberson/agent-advocate.git` (an SSH equival
 Read the actual installed `review-deep` adapter and its helper files. The current Codex adapter deliberately refuses isolated lens dispatch; having a child-spawn tool alone does not override it. The owning fix is the amended [Skill Mesh Phase CD plan](https://github.com/aberson/skill-mesh/blob/main/documentation/codex-deep-review-unblock-plan.md), existing [#222](https://github.com/aberson/skill-mesh/issues/222) and [#223](https://github.com/aberson/skill-mesh/issues/223). Its scope includes packaged code-lane helpers, capacity-aware independent reviewer batches, capability-conditioned mapping, installed-host proof and normal profile refresh. Keep this project's deep review flags intact.
 
 That repair runs in the **Skill Mesh checkout**, using its own instructions and plan. It does not resume the rest of that repository's backlog. Do not hand-edit a generated consumer skill or add a project-local copy of the shared engine. A source change, a passing static test or an unactivated disposable install is not a working review route. Reuse a valid capability receipt only for the unchanged host/session/package; otherwise qualify the actual route.
+
+The next requested continuation should perform only Phase CD Step 156 first,
+using its recorded source acceptance and existing reviewed runbook. Launch the
+long-lived installed verifier with `exec_command` using `tty: true`, retain its
+parent-only handle, and use `write_stdin` for the protocol. Load the installed
+contracts completely before probing. Allow one 20-minute total setup/proof/normal
+activation attempt; no full Skill Mesh suite, source reimplementation or repeated
+reviews of unchanged source. If that attempt is incomplete, checkpoint the exact
+blocker and stop. The launch correction is recorded but has not yet been proved.
 
 Reconcile issue #1 and the existing worktree's latest developer/reviewer receipts. Later Claude/Opus review rounds exist after the first blocked report. Preserve their candidate, unresolved findings and consumed retry budget; coordinate with the current builder before taking ownership. A qualified, separately authorized Claude route does not qualify Codex, and this handoff does not silently switch models or hosts.
 
