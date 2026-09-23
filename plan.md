@@ -4,7 +4,7 @@
 
 **Objective:** help a coding coordinator finish useful work by surfacing evidenced delivery problems before work, at normal checkpoints, and after work, with a simple timer that makes overdue expectations visible.
 
-**Status:** APPROVED SCOPE; Step 1 is blocked with an unmerged implementation preserved, and Steps 2/3/M1 remain TODO. On 2026-09-23 the operator requested that recurring review-capability failures be addressed first, then work continue. The five-skill v0, SQLite, configurable 60-second timer, Codex first, public repository and private runtime storage were approved on 2026-09-22. No repeated approval of those defaults is needed.
+**Status:** APPROVED SCOPE; Step 1 remains blocked after its bounded fifth developer/review round, with candidate `e4a9d6d` preserved on `build-step-1-20260923`; Steps 2/3/M1 remain TODO. The selected Codex review route is qualified and active. On 2026-09-23 the operator requested that recurring review-capability failures be addressed first, then work continue. The five-skill v0, SQLite, configurable 60-second timer, Codex first, public repository and private runtime storage were approved on 2026-09-22. No repeated approval of those defaults is needed.
 
 **Release sequence:** repair the selected build workflow's review prerequisite, resume the preserved v0 work, use v0 during selected v1 work, then resume the broader separately approved Skill Mesh improvements. Agent Advocate's product has no runtime dependency on Skill Mesh, Switchboard, or an observatory. The current workspace's chosen Codex build workflow needs the specific shared review repair described in section 11; other qualified build workflows need not depend on Skill Mesh. No broad v1 build or unrelated Skill Mesh work is authorized by this v0 plan.
 
@@ -211,17 +211,15 @@ Open that watcher in a terminal you can see. Ctrl+C stops monitoring without sto
 
 ### First: resolve the required review route
 
-The selected Codex workflow's installed `review-deep` adapter currently returns `required_tool_missing` unconditionally. Its shared repair belongs to [Skill Mesh Phase CD](https://github.com/aberson/skill-mesh/blob/main/documentation/codex-deep-review-unblock-plan.md), existing implementation [#222](https://github.com/aberson/skill-mesh/issues/222) and installed qualification [#223](https://github.com/aberson/skill-mesh/issues/223). The September 23 amendment covers conditional host mapping, the missing packaged code-lane helpers, six independent reviewers scheduled within available slots, and normal installed-profile refresh after proof. This project owns early detection and actionable tracking of that problem, not a fork of the shared review engine.
+The selected Codex workflow's installed `review-deep` route was qualified and activated on 2026-09-23. Its shared repair and qualification belong to [Skill Mesh Phase CD](https://github.com/aberson/skill-mesh/blob/main/documentation/codex-deep-review-unblock-plan.md), implementation [#222](https://github.com/aberson/skill-mesh/issues/222) and installed qualification [#223](https://github.com/aberson/skill-mesh/issues/223). This project owns early detection and actionable tracking of that route, not a fork of the shared review engine.
 
 Before resuming this build, use the above capability check manually from this plan (the product skills are still unbuilt). Keep Steps 1/3 on `--reviewers deep`. Qualify and load the corrected Codex route before dispatch; do not infer success from source edits or a disposable install alone. A separately authorized, demonstrably working Claude route remains distinct and does not qualify Codex. This narrow repair is the exception to the prior decision to defer broader Skill Mesh improvements.
 
-Latest prerequisite outcome: the reviewed source is accepted on Skill Mesh main
-under its one-candidate validation exception. The bounded installed proof stopped
-at a verifier launch without `tty: true`; it exited on closed stdin before native
-capability proof or any fixture build/review. The real profile remains unchanged.
-The next-attempt correction and remaining qualification are in the
-[build handoff](documentation/build-handoff.md). Do not mistake this invocation
-error for demonstrated host incapability or restart the interrupted root suite.
+Latest prerequisite outcome: Skill Mesh main `110d916` records source acceptance,
+six passing independent lenses, an authenticated `ADVANCE`, and all 129 installed
+files matching the ledger and frozen manifest. This consumer session separately
+passed caller-scoped service, conversation-v2 freshness, tamper, and key-rotation
+probes. The deferred Skill Mesh root suite remains outside this product build.
 
 Reconcile Git, issue #1, the existing Step 1 worktree and its latest review receipts before any restart. Work exists beyond the earlier "build did not start" report: later Claude/Opus reviews and repair passes are preserved. Preserve the implementation, unresolved findings, current owner and consumed retry rounds. Resume that candidate; do not create another Step 1 implementation, reset its budget, or overwrite an active builder. Record incomplete prerequisites honestly and stop only the dependent dispatch while unrelated authorized work can continue.
 
@@ -239,11 +237,18 @@ deadline, test time and next observable result before dispatch. On either limit,
 checkpoint and stop; do not extend the limit, relax a required gate or start a new
 repair cycle automatically. These are execution bounds, not completion estimates.
 
-First reconcile Step 1's preserved iteration 4 developer receipt (26 tests passed
-in 34.70 seconds); its independent review is still outstanding. Review that
-candidate before sending another implementation task. Carry forward all consumed
-review rounds and the original resolved retry limit; if that limit cannot be
-established, report the specific uncertainty instead of resetting it to a default.
+The preserved iteration 4 candidate was independently reviewed and returned three
+security Blocks. The authorized fifth developer pass repaired those findings and
+produced candidate `e4a9d6d`; 29 tests passed in 46.45 seconds and `git diff --check`
+passed. Its fifth deep review still returned `NEEDS-WORK`: POSIX FIFO evidence can
+block during `open()` before non-regular classification, and correctness/bugs lenses
+treated the bounded 8 MiB + one-byte growth sentinel as violating an exact 8 MiB
+read comment. The latter is a severity/wording dispute: no overflow byte is hashed
+or captured, and the plan requires bounded work rather than an exact 8 MiB physical
+read. Preserve both the raw verdict and this coordinator disagreement. Four prior
+developer passes, three prior completed reviews, two failed review starts, iteration
+4, and the single authorized fifth pass/review remain distinct; the original retry
+maximum is unknown and was not reset. No sixth round is authorized.
 A qualifying full-suite receipt is reusable only while source, tests, dependencies,
 configuration and generated inputs remain unchanged. A further test/review cycle
 must name the changed input or unresolved acceptance defect it will check. Optional
@@ -254,7 +259,7 @@ this consumer build. Keep the declared deep gates for Steps 1 and 3.
 
 - **Problem:** A coordinator needs one durable place to register work, checkpoints, observations and cautions without exposing private evidence.
 - **Type:** code
-- **Status:** BLOCKED (2026-09-23)
+- **Status:** BLOCKED (2026-09-23; candidate `e4a9d6d`, round 5 `NEEDS-WORK`)
 - **Issue:** #1
 - **Flags:** --reviewers deep --isolation worktree
 - **Files:** `pyproject.toml`; `uv.lock`; `src/agent_advocate/__init__.py`; `src/agent_advocate/cli.py`; `src/agent_advocate/store.py`; `src/agent_advocate/service.py`; `tests/test_store.py`; `tests/test_cli.py`; `tests/test_privacy.py`; `README.md`; `CLAUDE.md`; `plan.md` (status/evidence only).
