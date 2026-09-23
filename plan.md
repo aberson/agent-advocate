@@ -223,6 +223,25 @@ Before Step 1, no runtime suite exists: record the baseline as **not yet created
 
 ### Automated Steps
 
+**Bounded resume defaults (2026-09-23):** In response to the operator's request to
+avoid another testing overrun, the coordinator selects a 90-minute total wall-clock
+budget for the next Steps 1-3 invocation and at most five minutes of cumulative
+test execution per step, across worktree and integrated checks. Record the start,
+deadline, test time and next observable result before dispatch. On either limit,
+checkpoint and stop; do not extend the limit, relax a required gate or start a new
+repair cycle automatically. These are execution bounds, not completion estimates.
+
+First reconcile Step 1's preserved iteration 4 developer receipt (26 tests passed
+in 34.70 seconds); its independent review is still outstanding. Review that
+candidate before sending another implementation task. Carry forward all consumed
+review rounds and the original resolved retry limit; if that limit cannot be
+established, report the specific uncertainty instead of resetting it to a default.
+A qualifying full-suite receipt is reusable only while source, tests, dependencies,
+configuration and generated inputs remain unchanged. A further test/review cycle
+must name the changed input or unresolved acceptance defect it will check. Optional
+improvements become deferred work. The shared Skill Mesh root suite is outside
+this consumer build. Keep the declared deep gates for Steps 1 and 3.
+
 ### Step 1: Persist an advocated run and its evidence
 
 - **Problem:** A coordinator needs one durable place to register work, checkpoints, observations and cautions without exposing private evidence.
@@ -305,6 +324,7 @@ After Steps 1-3, hand off **Please run M1 next**. Do not mark v0 fully accepted 
 | P6 | P | Public repository; private data may be kept private | approved 2026-09-22 |
 | P7 | P | Previously accepted build/plan/review/effort remedies remain future Skill Mesh work | approved 2026-09-22 |
 | P8 | P | Address recurring required-review unavailability first, then continue | requested 2026-09-23; narrow prerequisite exception to P5/P7 |
+| P9 | P | Make the existing build invocation usable without repeating endless testing | requested 2026-09-23 |
 | D1 | D | Standard-library Python runtime, uv, pytest dev, setuptools console entry | selected for small local build; implementation detail |
 | D2 | D | External per-user store; no public runtime exporter | selected to enforce private evidence boundary |
 | D3 | D | Project-local Codex skills; monitor targets through explicit run paths | selected to avoid installer/catalog dependencies in v0 |
@@ -312,6 +332,7 @@ After Steps 1-3, hand off **Please run M1 next**. Do not mark v0 fully accepted 
 | D5 | D | Explicit checkpoints; timer never launches models or fixes | selected to keep watchdog predictable and cheap |
 | D6 | D | At most five relevant cautions; candidates remain hypotheses | selected to limit irrelevant context; tune after real use |
 | D7 | D | Repair the shared adapter in existing Skill Mesh Phase CD; detect readiness here using existing observations | selected 2026-09-23; no duplicate review engine or new capability database |
+| D8 | D | Next resume: 90 minutes total, five minutes cumulative testing per step, preserved candidate/retries, stop at the bound | agent-selected 2026-09-23 execution limits; no gate downgrade or completion promise |
 
 ### Public source seeds
 

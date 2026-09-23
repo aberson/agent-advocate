@@ -42,6 +42,11 @@ Before resuming, resolve the selected workflow's required review capability as p
 
 Require meaningful behavior tests and a real short watchdog observation; do not require increasing test counts or a multi-hour soak. Independently review code changes and the live skill evidence. Repeated repairs should trigger diagnosis under the existing build workflow, preserving its authorized retry budget. Keep reviews tied to defects and acceptance; optional improvements do not expand v0.
 
+The next Steps 1-3 resume uses plan.md section 11's enclosing 90-minute limit and
+five-minute cumulative test budget per step. Start with independent review of the
+preserved Step 1 iteration 4 candidate. Preserve retry history; do not reset it or
+re-run unchanged checks automatically. Reaching a bound means checkpoint and stop.
+
 ## Current state
 
 Main contains the plan and scaffold. Step 1 is blocked with an unmerged implementation and review receipts preserved in its worktree; do not discard or recreate them. Product skill execution and live acceptance remain unproven. Current step status is owned by plan.md; reconcile the actual candidate and issue history before resume.

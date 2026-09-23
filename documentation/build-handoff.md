@@ -37,6 +37,16 @@ Once the required route is demonstrably available and build ownership is settled
 
 This is a host skill invocation, not a PowerShell executable. Resolve the installed `build-phase` skill through the host's available skill mechanism and follow it. Public contributors without that workflow can implement the same three steps directly from the canonical plan and linked issues; the Python product does not depend on that external workflow.
 
+Apply plan.md section 11's bounded resume defaults: 90 minutes total for this
+invocation, at most five minutes of cumulative testing per step, and checkpoint
+then stop on either bound. These are coordinator-selected limits responding to
+the operator's testing-overrun concern, not promised completion times. Reconcile
+and independently review the preserved iteration 4 candidate first; its latest
+developer receipt reports 26 tests passed in 34.70 seconds. Preserve the actual
+consumed rounds and resolved retry limit. A new cycle must address a named changed
+input or unresolved acceptance defect. Do not launch Skill Mesh's root suite from
+this consumer build or expand acceptance with optional reviewer preferences.
+
 ## Deliver the approved behavior
 
 1. Persist an advocated run, checkpoints, evidence and cautions using a private SQLite store and a real CLI.

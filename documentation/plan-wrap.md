@@ -51,3 +51,13 @@ Read the workspace/project instructions, full plan-wrap wrapper/core, full plan,
 Next: synchronize the amended existing issue bodies and carry out the prerequisite in its owning repository before dependent build dispatch, preserving existing build work.
 
 READY
+
+## Bounded resume amendment, 2026-09-23
+
+After the narrow independent technical review and P9/D8 proposal update, the
+self-containment check confirms that section 11, CLAUDE.md and the handoff agree
+on the numeric bounds, start/deadline recording, cumulative test accounting,
+unchanged-input evidence reuse, preserved iteration 4 review, retry continuity
+and stop behavior. Existing prerequisite qualification remains required. No
+product schema, acceptance gate, file producer or step dependency changed.
+READY for synchronizing the existing issue bodies; no runtime tests were run.

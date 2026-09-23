@@ -66,3 +66,14 @@ The source repair dependency is independently reviewed in Skill Mesh's Phase CD 
 Next: plan-redline, then plan-wrap, followed by synchronization of changed existing issue bodies. No new approval is requested by this review.
 
 Auto-applied 0 fixes. Plan is ready for `/plan-wrap` and `/repo-sync`.
+
+## Bounded resume amendment, 2026-09-23
+
+An independent adversarial follow-up reviewed only section 11's new execution
+limits and the matching instructions/handoff. No contradiction or unsafe bypass
+was found: both bounds require checkpoint-and-stop, deep/full-project gates stay
+required, unchanged-input receipt reuse is conditional, the iteration 4 developer
+receipt does not replace independent review, and historical retry limits remain
+binding. No tests or new scope were added. Existing review findings for the
+unchanged product plan remain applicable. Next: update the existing proposal's
+P9/D8 entries, then perform the narrow self-containment check.
