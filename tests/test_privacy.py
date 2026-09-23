@@ -404,6 +404,127 @@ def test_local_evidence_that_grows_during_hashing_is_not_captured(
     assert list((private / "evidence").glob("*.evidence")) == []
 
 
+def test_evidence_growth_at_limit_never_reads_beyond_limit(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    project = git_project(tmp_path / "project")
+    private = tmp_path / "private"
+    store = Store(private)
+    initialize(store)
+    run, _ = start(
+        store,
+        {
+            "project_path": str(project),
+            "goal": "Keep the evidence read ceiling strict",
+            "acceptance": ["Growth detection never consumes an overflow byte"],
+            "non_goals": [],
+            "models": [],
+            "next_check_at": future(),
+            "deadline_at": None,
+        },
+    )
+    source = project / "limit.bin"
+    with source.open("wb") as handle:
+        handle.truncate(MAX_LOCAL_EVIDENCE_BYTES)
+    original_read = service_module._read_evidence_block
+    requested_sizes: list[int] = []
+    returned_bytes = 0
+    grew = False
+
+    def grow_at_limit(handle, size):
+        nonlocal grew, returned_bytes
+        requested_sizes.append(size)
+        block = original_read(handle, size)
+        returned_bytes += len(block)
+        if returned_bytes == MAX_LOCAL_EVIDENCE_BYTES and not grew:
+            with source.open("ab") as writer:
+                writer.write(b"growth")
+            grew = True
+        return block
+
+    monkeypatch.setattr(service_module, "_read_evidence_block", grow_at_limit)
+    observation, _ = observe(
+        store,
+        run["run_id"],
+        {
+            "observation_id": str(uuid.uuid4()),
+            "statement": "Do not read a growth sentinel beyond the limit",
+            "basis": "measured",
+            "evidence": [{"kind": "local", "locator": str(source), "captured_at": future(), "excerpt": None, "sha256": None}],
+            "pattern_key": None,
+            "recommendation": None,
+            "analysis_kind": "none",
+            "assessor_id": None,
+            "supersedes": None,
+        },
+    )
+    assert grew
+    assert sum(requested_sizes) == MAX_LOCAL_EVIDENCE_BYTES
+    assert returned_bytes == MAX_LOCAL_EVIDENCE_BYTES
+    assert observation["evidence"][0]["availability"] == "too-large"
+    assert list((private / "evidence").glob("*.evidence")) == []
+
+
+@pytest.mark.skipif(os.name == "nt" or not hasattr(os, "mkfifo"), reason="POSIX FIFO test")
+def test_posix_fifo_evidence_is_rejected_without_blocking_the_cli(tmp_path: Path) -> None:
+    project = git_project(tmp_path / "project")
+    private = tmp_path / "private"
+    store = Store(private)
+    initialize(store)
+    run, _ = start(
+        store,
+        {
+            "project_path": str(project),
+            "goal": "Reject non-regular evidence promptly",
+            "acceptance": ["A FIFO cannot block evidence ingestion"],
+            "non_goals": [],
+            "models": [],
+            "next_check_at": future(),
+            "deadline_at": None,
+        },
+    )
+    source = project / "evidence.fifo"
+    os.mkfifo(source)
+    request = tmp_path / "fifo-observation.json"
+    request.write_text(
+        json.dumps(
+            {
+                "observation_id": str(uuid.uuid4()),
+                "statement": "A FIFO is not evidence",
+                "basis": "measured",
+                "evidence": [{"kind": "local", "locator": str(source), "captured_at": future(), "excerpt": None, "sha256": None}],
+                "pattern_key": None,
+                "recommendation": None,
+                "analysis_kind": "none",
+                "assessor_id": None,
+                "supersedes": None,
+            }
+        ),
+        encoding="utf-8",
+    )
+    result = subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "agent_advocate.cli",
+            "--data-dir",
+            str(private),
+            "observe",
+            run["run_id"],
+            "--file",
+            str(request),
+        ],
+        cwd=ROOT,
+        capture_output=True,
+        text=True,
+        check=False,
+        timeout=5,
+    )
+    assert result.returncode == 0, result.stderr
+    assert json.loads(result.stdout)["observation"]["evidence"][0]["availability"] == "not-regular"
+    assert list((private / "evidence").glob("*.evidence")) == []
+
+
 def test_home_and_filesystem_root_cannot_be_registered_as_projects(tmp_path: Path) -> None:
     private = tmp_path / "private"
     assert invoke(private, "init").returncode == 0

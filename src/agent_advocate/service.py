@@ -564,7 +564,7 @@ def _open_local_evidence(
 
 def _open_evidence_descriptor(path: Path) -> int:
     if os.name != "nt":
-        flags = os.O_RDONLY | getattr(os, "O_BINARY", 0)
+        flags = os.O_RDONLY | getattr(os, "O_BINARY", 0) | getattr(os, "O_NONBLOCK", 0)
         return os.open(path, flags)
 
     import ctypes
@@ -690,18 +690,20 @@ def _file_digest_and_excerpt(
     digest = hashlib.sha256()
     excerpt = bytearray()
     total = 0
-    while block := _read_evidence_block(
-        handle, min(64 * 1024, MAX_LOCAL_EVIDENCE_BYTES + 1 - total)
+    while total < MAX_LOCAL_EVIDENCE_BYTES and (
+        block := _read_evidence_block(
+            handle, min(64 * 1024, MAX_LOCAL_EVIDENCE_BYTES - total)
+        )
     ):
         total += len(block)
-        if total > MAX_LOCAL_EVIDENCE_BYTES:
-            return None, b"", "too-large"
         digest.update(block)
         if len(excerpt) < MAX_EXCERPT_BYTES:
             excerpt.extend(block[: MAX_EXCERPT_BYTES - len(excerpt)])
     final_stat = os.fstat(handle.fileno())
     before = (opened_stat.st_size, opened_stat.st_mtime_ns, opened_stat.st_ctime_ns)
     after = (final_stat.st_size, final_stat.st_mtime_ns, final_stat.st_ctime_ns)
+    if final_stat.st_size > MAX_LOCAL_EVIDENCE_BYTES:
+        return None, b"", "too-large"
     if before != after:
         return None, b"", "changed"
     return digest.hexdigest(), bytes(excerpt), "captured"

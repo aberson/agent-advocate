@@ -253,7 +253,30 @@ A qualifying full-suite receipt is reusable only while source, tests, dependenci
 configuration and generated inputs remain unchanged. A further test/review cycle
 must name the changed input or unresolved acceptance defect it will check. Optional
 improvements become deferred work. The shared Skill Mesh root suite is outside
-this consumer build. Keep the declared deep gates for Steps 1 and 3.
+this consumer build. Keep the declared deep gates for Steps 1 and 3, subject to
+the explicitly approved Step 1 closing exception below.
+
+### Approved Step 1 closing exception (2026-09-23)
+
+The operator explicitly approved a narrowly scoped closing review and assigned
+this coordinator ownership of the existing Step 1 fix. This supersedes the prior
+no-sixth-round stop only for closing the FIFO and size-limit findings. It does not
+restart the three-step phase or alter Step 3's review requirement.
+
+Use the existing repair to open POSIX evidence nonblocking and enforce the exact
+8 MiB read limit with final metadata checks; retain its completed Windows suite
+receipt and run the missing actual Linux FIFO regression. One fresh independent
+reviewer checks this repair and affected behavior against candidate `e4a9d6d`.
+Reuse previous evidence for unchanged code. Do not launch another six-lens round
+or rerun unchanged tests. A material unresolved defect prevents acceptance.
+
+The closing attempt has a 30-minute wall-clock limit, starting 2026-09-23
+23:48:38 UTC and ending 2026-09-24 00:18:38 UTC, with no automatic repeat. On
+successful validation and closing review, record Step 1 acceptance and merge the
+preserved implementation. Keep the historical deep `NEEDS-WORK` and authenticated
+`BLOCKED` records unchanged; this is a separate operator-approved acceptance,
+not a new deep-review PASS or authenticated workflow ADVANCE. The unchanged
+product plan needs no additional plan-review cycle for this execution exception.
 
 ### Step 1: Persist an advocated run and its evidence
 
@@ -338,6 +361,7 @@ After Steps 1-3, hand off **Please run M1 next**. Do not mark v0 fully accepted 
 | P7 | P | Previously accepted build/plan/review/effort remedies remain future Skill Mesh work | approved 2026-09-22 |
 | P8 | P | Address recurring required-review unavailability first, then continue | requested 2026-09-23; narrow prerequisite exception to P5/P7 |
 | P9 | P | Make the existing build invocation usable without repeating endless testing | requested 2026-09-23 |
+| P10 | P | Close Step 1 with its narrow repair, missing Linux regression and one independent closing review; merge on acceptance | approved 2026-09-23; 30-minute exception, prior deep verdict preserved |
 | D1 | D | Standard-library Python runtime, uv, pytest dev, setuptools console entry | selected for small local build; implementation detail |
 | D2 | D | External per-user store; no public runtime exporter | selected to enforce private evidence boundary |
 | D3 | D | Project-local Codex skills; monitor targets through explicit run paths | selected to avoid installer/catalog dependencies in v0 |

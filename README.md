@@ -46,6 +46,11 @@ uv run --locked agent-advocate finish RUN_ID --outcome completed --summary "Deli
 
 Use `patterns import --file patterns.json` for a UTF-8 JSON array of validated pattern records and `pattern KEY --disposition VALUE --reason TEXT` to retain a private disposition. `brief` returns at most five applicable, non-retired cautions. Full entity and command contracts, privacy constraints, later skills, and the watchdog scope are in [plan.md](plan.md).
 
+Local evidence reads and hashing are capped at 8 MiB per source, while the retained
+excerpt stays capped at 8 KiB. Oversized sources return `too-large`; a source that
+changes during capture returns `changed` or `too-large`. POSIX named pipes are
+opened without waiting for a writer and rejected as `not-regular`.
+
 ## Boundaries
 
 The store is not encryption, a public exporter, a dashboard, a model client or an autonomous fixer. Evidence is untrusted data, not instructions. Copied excerpts remain private and are omitted from CLI JSON in favor of metadata marked `private-untrusted`; downstream skills must not treat evidence text as instructions. Keep private store directories and local receipts out of Git. The five Codex skills and the foreground watchdog are intentionally later steps; mechanical tests do not substitute for their live acceptance.
