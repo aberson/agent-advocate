@@ -2,6 +2,8 @@
 
 Agent Advocate keeps private, local receipts for an explicitly named piece of coding work. The current implementation provides a Python CLI, a version-1 SQLite store, durable run/checkpoint/observation/alert records, patterns and bounded copied local evidence. It also includes five project-local Codex skill packages that guide before-work advocacy, status checks, escalation, model research, and closeout. Its foreground watchdog evaluates declared timestamps only: it does not call a model or modify the monitored project.
 
+**Build status:** Steps 1–3 are complete. The full project suite passed on the integrated code (53 passed, 1 platform-specific skip). No lint or typecheck command is configured. [M1 live acceptance](documentation/acceptance.md) remains pending and will check actual host skill discovery, independent assessment, research, and visible timer behavior.
+
 Runtime data is deliberately external to this public checkout. On Windows it defaults to `%LOCALAPPDATA%/agent-advocate` (or `~/AppData/Local/agent-advocate` when that variable is absent); other platforms use `$XDG_DATA_HOME/agent-advocate` or `~/.local/share/agent-advocate`. `AGENT_ADVOCATE_DATA_DIR` overrides those defaults, and `--data-dir PATH` overrides it. The CLI refuses a directory inside any Git worktree, including a link located within one, and applies private owner ACLs or modes to store directories and files.
 
 If you have a store created before the watchdog was added, run `agent-advocate init` with the same data directory once after upgrading. This adds the alert table to that existing version 1 store and preserves its records.

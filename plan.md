@@ -355,7 +355,29 @@ the completed receipts also cover their identical integrated state. See the
 
 After Steps 1-3, hand off **Please run M1 next**. Do not mark v0 fully accepted from code-step success alone.
 
-## 12. Appendix
+## 12. Build completion record — v0 code phase
+
+**Status:** Steps 1–3 built and reviewed; the integrated full project suite passed with 53 tests passed and 1 platform-specific skip. No lint or typecheck command is configured. M1 is a separate live acceptance step and remains TODO.
+
+### What shipped
+
+- Step 1: private SQLite run, evidence, and CLI lifecycle under the approved P10 closing exception.
+- Step 2: five project-local advocate skills, shared contract, public seed data, and provenance-aware pattern handling.
+- Step 3: foreground watchdog with persistent alert dispositions, concurrent-watcher behavior, and the prepared M1 procedure.
+
+### Files changed
+
+| Area | Delivered files |
+|---|---|
+| CLI and store | `src/agent_advocate/cli.py`, `service.py`, `store.py`, `watch.py` |
+| Skills and public resources | `.agents/skills/`, `data/`, `documentation/skill-contract.md` |
+| Checks and acceptance | `tests/`, `documentation/acceptance.md`, `README.md`, `CLAUDE.md` |
+
+### Fresh context notes
+
+Step 1's P10 exception is documented in `documentation/step-1-closure.md`; it does not change Step 3's deep review result. Code tests and review do not establish live host behavior. Follow `documentation/acceptance.md` in a fresh Codex session for M1, and keep runtime evidence outside source repositories.
+
+## 13. Appendix
 
 ### Decision Inventory
 
