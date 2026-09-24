@@ -7,6 +7,8 @@ Use this skill for a routine, neutral status request. Read the
 [shared contract](../../../documentation/skill-contract.md) first.
 Before any CLI request, resolve this physical `SKILL.md` upward to its
 `<resolved-checkout>` and use `uv run --project <resolved-checkout> --locked agent-advocate ...`.
+When reached through an installed wrapper, require its manifest and source
+digest validation in the shared contract before proceeding.
 
 1. Read the run, its latest checkpoint, and its bounded brief. Inspect only the
    specifically supplied receipts needed to compare the claim with acceptance.

@@ -9,6 +9,7 @@ import sys
 from typing import Any, TextIO
 
 from . import __version__
+from .skill_install import install_skills, skills_status, uninstall_skills
 from .service import (
     brief,
     checkpoint,
@@ -38,6 +39,12 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--version", action="version", version=__version__)
     parser.add_argument("--data-dir", metavar="PATH", help="private store directory")
     commands = parser.add_subparsers(dest="command", required=True)
+    skills_parser = commands.add_parser("skills", help="manage user-scoped Codex skills")
+    skill_commands = skills_parser.add_subparsers(dest="skills_command", required=True)
+    install_parser = skill_commands.add_parser("install", help="install or refresh all five skills")
+    install_parser.add_argument("--source-checkout", required=True, metavar="PATH")
+    skill_commands.add_parser("status", help="check ownership and source bindings")
+    skill_commands.add_parser("uninstall", help="remove owned skills")
     commands.add_parser("init", help="create the private store")
     start_parser = commands.add_parser("start", help="register an advocated run")
     start_parser.add_argument("--file", required=True, metavar="PATH")
@@ -98,6 +105,14 @@ def _emit(value: Any, stream: TextIO | None = None) -> None:
 
 
 def run(args: argparse.Namespace) -> dict[str, Any]:
+    if args.command == "skills":
+        if args.skills_command == "install":
+            return install_skills(args.source_checkout)
+        if args.skills_command == "status":
+            return skills_status()
+        if args.skills_command == "uninstall":
+            return uninstall_skills()
+        raise RequestError("unknown skills command")
     store = Store(resolve_data_dir(args.data_dir))
     if args.command == "init":
         return initialize(store)
@@ -166,7 +181,22 @@ def main(argv: list[str] | None = None) -> int:
     except AdvocateError as error:
         _emit({"error": error.error_type, "message": str(error)}, sys.stderr)
         return error.exit_code
-    except (OSError, ValueError, sqlite3.DatabaseError):
+    except OSError as error:
+        if args.command == "skills":
+            _emit(
+                {"error": "setup_error", "message": f"skill filesystem operation failed: {error}"},
+                sys.stderr,
+            )
+            return 2
+        _emit(
+            {
+                "error": "store_unavailable",
+                "message": "private store operation failed; preserve this directory for diagnosis",
+            },
+            sys.stderr,
+        )
+        return 3
+    except (ValueError, sqlite3.DatabaseError):
         _emit(
             {
                 "error": "store_unavailable",

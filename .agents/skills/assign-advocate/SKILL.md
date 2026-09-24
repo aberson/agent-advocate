@@ -10,6 +10,8 @@ Before any CLI request, resolve this physical `SKILL.md` upward to its
 `<resolved-checkout>` and use `uv run --project <resolved-checkout> --locked agent-advocate ...`.
 The monitored project's path comes from the named run, not from the current
 working directory or the skill checkout.
+When reached through an installed wrapper, require its manifest and source
+digest validation in the shared contract before proceeding.
 
 1. Identify the named work, target project, acceptance, exclusions, and whether
    the user wants setup only or execution now. Reuse a matching existing run;

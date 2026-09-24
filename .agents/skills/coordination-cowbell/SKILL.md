@@ -8,6 +8,8 @@ failing, or a watchdog alert exists. Read the
 [shared contract](../../../documentation/skill-contract.md) first.
 Before any CLI request, resolve this physical `SKILL.md` upward to its
 `<resolved-checkout>` and use `uv run --project <resolved-checkout> --locked agent-advocate ...`.
+When reached through an installed wrapper, require its manifest and source
+digest validation in the shared contract before proceeding.
 
 1. Name the condition and inspect its supplied receipts. Separate unsupported
    adapter, missing resource, capacity mismatch, service failure, and actual

@@ -70,6 +70,36 @@ excerpt stays capped at 8 KiB. Oversized sources return `too-large`; a source th
 changes during capture returns `changed` or `too-large`. POSIX named pipes are
 opened without waiting for a writer and rejected as `not-regular`.
 
+## User-scoped skills
+
+To make the five skills available to a fresh Codex session in another
+repository, install from this checkout using the same absolute checkout path
+in both positions:
+
+```powershell
+uv run --project <agent-advocate-checkout> --locked agent-advocate skills install --source-checkout <agent-advocate-checkout>
+uv run --project <agent-advocate-checkout> --locked agent-advocate skills status
+```
+
+The installer writes five discoverable wrappers to the current user's
+`~/.agents/skills/` directory. Each package records its owning skill name,
+resolved source checkout, and source skill SHA-256. The wrapper validates its
+record, reads the canonical source skill and shared contract, and pins all CLI
+calls to that checkout. `skills status` reports each package separately; source
+drift, a moved checkout, or an incomplete package needs repair with `skills
+install` from the intended checkout. Installation refuses foreign packages and
+linked destinations. `skills status` also reports `partial_stages` and keeps
+`all_ready` false if a previous refresh left an owned backup. Repeat `skills
+install` removes recoverable staged packages; a stage with unknown content is
+reported as a conflict and left untouched. `skills uninstall` removes only
+owned packages; it does not delete the source checkout or private run store.
+
+Start a **fresh** Codex session in the target repository, verify all five
+names in the host's skill list, then invoke `$assign-advocate for <named work>`
+with the target project and acceptance. Put request files and runtime data in
+an external private directory. The exact [installed-client acceptance procedure](documentation/v1-cross-project-acceptance.md)
+is the Step 5 live gate; package tests alone do not prove host discovery.
+
 ## Project-local skills
 
 Codex discovers the five project-owned packages under `.agents/skills/` when its
@@ -86,8 +116,8 @@ project-skill discovery is available:
 From this checkout, start a fresh Codex session and invoke
 `$assign-advocate for <named work>`. Give it the target project and acceptance
 or point it at the relevant plan step. It can prepare a run for later execution
-or coordinate work the user has asked to run. The five skills are still
-project-local until the v1 user-level installer is built and live-checked.
+or coordinate work the user has asked to run. The source packages remain
+available in this checkout.
 
 Their shared [skill contract](documentation/skill-contract.md) defines the v1
 CLI request shapes, synthetic capability examples, source-provenance rules, and

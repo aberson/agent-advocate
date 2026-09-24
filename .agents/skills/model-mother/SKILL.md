@@ -8,6 +8,8 @@ refresh. Read the [shared contract](../../../documentation/skill-contract.md)
 and the [stock model families](../../../data/model-families.json) first.
 Before any CLI request, resolve this physical `SKILL.md` upward to its
 `<resolved-checkout>` and use `uv run --project <resolved-checkout> --locked agent-advocate ...`.
+When reached through an installed wrapper, require its manifest and source
+digest validation in the shared contract before proceeding.
 
 1. Prefer an exact requested model ID recorded in the run. The stock labels are
    user-editable families, not model/version claims.

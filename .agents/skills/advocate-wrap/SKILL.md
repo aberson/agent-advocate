@@ -7,6 +7,8 @@ Use this skill when an advocated run is completed, stopped, or abandoned. Read
 the [shared contract](../../../documentation/skill-contract.md) first.
 Before any CLI request, resolve this physical `SKILL.md` upward to its
 `<resolved-checkout>` and use `uv run --project <resolved-checkout> --locked agent-advocate ...`.
+When reached through an installed wrapper, require its manifest and source
+digest validation in the shared contract before proceeding.
 
 1. Reconcile advice and observations into one of: new rule gap, existing rule
    missed, rule conflict or obsolete rule, environmental failure, task-specific

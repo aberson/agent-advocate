@@ -53,7 +53,7 @@ No v1 SQLite schema field, public seed, or watchdog timing constant changes in t
 
 - **Problem:** A Codex coordinator started outside this checkout cannot discover the five project-local skills for a real project.
 - **Type:** code
-- **Status:** TODO
+- **Status:** DONE
 - **Issue:** #7
 - **Flags:** --reviewers deep --isolation worktree
 - **Files:** `src/agent_advocate/cli.py`, new `src/agent_advocate/skill_install.py`, `.agents/skills/*/SKILL.md`, `documentation/skill-contract.md`, `tests/test_skill_resources.py`, `tests/test_cli.py`, `README.md`, new `documentation/v1-cross-project-acceptance.md`

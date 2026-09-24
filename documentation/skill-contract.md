@@ -16,6 +16,22 @@ are synthetic and must not be represented as live acceptance evidence.
 
 ## Checkout-bound CLI requests
 
+For a user-installed package, first read its adjacent
+`agent-advocate-install.json`. Require exactly `schema_version: 1`,
+`owner: "agent-advocate"`, the invoked `skill_name`, an absolute physically
+resolved `source_checkout`, and a lowercase SHA-256 `source_sha256`. Require
+`pyproject.toml`, `uv.lock`, the named
+`.agents/skills/<skill_name>/SKILL.md`, and this shared contract inside that
+checkout. Hash the named source skill bytes and compare with `source_sha256`;
+hash this contract's bytes and compare with the SHA-256 pinned in the installed
+wrapper; then read that canonical source skill and this contract. If anything
+is missing or differs, stop with a repair-needed result. The operator must reinstall from
+the intended checkout and verify `skills status`. Never fall back to the
+current directory, another checkout, or a bare CLI. Each installed package is
+independently checked; partial installation is not readiness.
+
+For a project-local source package, use the physical path rule below directly.
+
 Before any CLI request, resolve the physical `SKILL.md` path and walk upward to
 the directory that owns both `pyproject.toml` and `.agents/skills`; call that
 directory `<resolved-checkout>`. Do not derive it from the current directory.
@@ -184,9 +200,8 @@ outcome only; it does not prove that a caution was resolved.
 
 ## Command boundary
 
-The v1 CLI owns persistence: `init`, `start`, `checkpoint`, `observe`, `status`,
-`brief`, `patterns import`, `pattern`, and `finish`. There is no watchdog or
-alert-disposition command in this step. A cowbell may record an investigation,
-but it must not claim an alert was acknowledged, dismissed, or resolved until
-the Step 3 command exists. The packages are mechanically validated here; actual
-native discovery, independent assessment, and web research are M1 observations.
+The CLI owns persistence and the foreground watcher. `skills install/status/uninstall`
+manage only the current user's five wrapper packages, independently of the
+private run store. Installed-client host discovery and independent assessment
+remain the separate M2 operator acceptance gate. Project-local v0 M1 acceptance
+remains separate.

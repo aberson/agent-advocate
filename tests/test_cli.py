@@ -1,12 +1,19 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime, timedelta
+import hashlib
 import json
 import os
 from pathlib import Path
+import shutil
 import subprocess
 import sys
 import uuid
+
+import pytest
+
+from agent_advocate import cli, skill_install
+from agent_advocate.store import ConflictError, SetupError
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -57,6 +64,529 @@ def write_json(path: Path, value: object) -> Path:
 
 def future() -> str:
     return (datetime.now(UTC) + timedelta(minutes=5)).isoformat().replace("+00:00", "Z")
+
+
+def fake_home(tmp_path: Path) -> tuple[Path, dict[str, str]]:
+    home = tmp_path / "user"
+    home.mkdir()
+    environment = os.environ.copy()
+    environment["USERPROFILE"] = str(home)
+    environment["HOME"] = str(home)
+    return home, environment
+
+
+def fake_source(tmp_path: Path) -> Path:
+    checkout = tmp_path / "source"
+    (checkout / "documentation").mkdir(parents=True)
+    (checkout / "documentation" / "skill-contract.md").write_text("Shared contract", encoding="utf-8")
+    (checkout / "pyproject.toml").write_text("[project]\nname = 'agent-advocate'\n", encoding="utf-8")
+    (checkout / "uv.lock").write_text("version = 1\n", encoding="utf-8")
+    for source in (ROOT / ".agents" / "skills").glob("*/SKILL.md"):
+        target = checkout / ".agents" / "skills" / source.parent.name
+        target.mkdir(parents=True)
+        shutil.copy2(source, target / "SKILL.md")
+    return checkout
+
+
+def test_skills_cli_install_refresh_status_and_owned_uninstall(tmp_path: Path) -> None:
+    home, environment = fake_home(tmp_path)
+    source = fake_source(tmp_path)
+    packages = home / ".agents" / "skills"
+    first = invoke(None, "skills", "install", "--source-checkout", str(source), environment=environment)
+    assert first.returncode == 0, first.stderr
+    first_status = json.loads(first.stdout)
+    assert first_status["all_ready"] is True
+    assert {item["name"] for item in first_status["skills"]} == {
+        "assign-advocate", "status-inquisition", "coordination-cowbell", "model-mother", "advocate-wrap"
+    }
+    assert all(item["state"] == "ready" for item in first_status["skills"])
+    contract = source / "documentation" / "skill-contract.md"
+    original_contract = contract.read_text(encoding="utf-8")
+    contract.write_text(original_contract + "\nChanged instruction.\n", encoding="utf-8")
+    contract_drift = json.loads(invoke(None, "skills", "status", environment=environment).stdout)
+    assert contract_drift["all_ready"] is False
+    assert all(item["state"] == "contract_drift" for item in contract_drift["skills"])
+    contract.write_text(original_contract, encoding="utf-8")
+    for item in first_status["skills"]:
+        package = packages / item["name"]
+        manifest = json.loads((package / "agent-advocate-install.json").read_text(encoding="utf-8"))
+        assert manifest["schema_version"] == 1 and manifest["owner"] == "agent-advocate"
+        assert manifest["source_checkout"] == str(source.resolve())
+        assert manifest["skill_name"] == item["name"]
+        assert manifest["source_sha256"] == hashlib.sha256(
+            (source / ".agents" / "skills" / item["name"] / "SKILL.md").read_bytes()
+        ).hexdigest()
+        assert (package / "SKILL.md").read_text(encoding="utf-8").startswith(f"---\nname: {item['name']}\n")
+
+    repeat = invoke(None, "skills", "install", "--source-checkout", str(source), environment=environment)
+    assert repeat.returncode == 0, repeat.stderr
+    assert sorted(path.name for path in packages.iterdir() if path.is_dir()) == sorted(
+        item["name"] for item in first_status["skills"]
+    )
+    source_skill = source / ".agents" / "skills" / "assign-advocate" / "SKILL.md"
+    source_skill.write_text(source_skill.read_text(encoding="utf-8") + "\nUpdated.\n", encoding="utf-8")
+    drift = json.loads(invoke(None, "skills", "status", environment=environment).stdout)
+    assert next(item for item in drift["skills"] if item["name"] == "assign-advocate")["state"] == "source_drift"
+    refreshed = invoke(None, "skills", "install", "--source-checkout", str(source), environment=environment)
+    assert refreshed.returncode == 0 and json.loads(refreshed.stdout)["all_ready"] is True
+    temporarily_missing = tmp_path / "moved-source"
+    source.rename(temporarily_missing)
+    unavailable = json.loads(invoke(None, "skills", "status", environment=environment).stdout)
+    assert all(item["state"] == "source_missing" for item in unavailable["skills"])
+    temporarily_missing.rename(source)
+    (packages / "model-mother" / "SKILL.md").unlink()
+    partial = json.loads(invoke(None, "skills", "status", environment=environment).stdout)
+    assert next(item for item in partial["skills"] if item["name"] == "model-mother")["state"] == "owned_incomplete"
+    assert json.loads(invoke(None, "skills", "install", "--source-checkout", str(source), environment=environment).stdout)["all_ready"] is True
+    unrelated = packages / "unrelated"
+    unrelated.mkdir()
+    (unrelated / "SKILL.md").write_text("Unrelated", encoding="utf-8")
+    removed = invoke(None, "skills", "uninstall", environment=environment)
+    assert removed.returncode == 0, removed.stderr
+    assert len(json.loads(removed.stdout)["removed"]) == 5
+    assert unrelated.exists()
+    assert all(not (packages / item["name"]).exists() for item in first_status["skills"])
+
+
+def test_skills_cli_refuses_foreign_collision_and_link(tmp_path: Path) -> None:
+    home, environment = fake_home(tmp_path)
+    source = fake_source(tmp_path)
+    packages = home / ".agents" / "skills"
+    packages.mkdir(parents=True)
+    foreign = packages / "model-mother"
+    foreign.mkdir()
+    (foreign / "SKILL.md").write_text("Foreign", encoding="utf-8")
+    collision = invoke(None, "skills", "install", "--source-checkout", str(source), environment=environment)
+    assert collision.returncode == 2 and collision.stdout == ""
+    assert json.loads(collision.stderr)["error"] == "conflict"
+    assert (foreign / "SKILL.md").read_text(encoding="utf-8") == "Foreign"
+    assert not (packages / "assign-advocate").exists()
+    removal = invoke(None, "skills", "uninstall", environment=environment)
+    assert removal.returncode == 2
+    assert foreign.exists()
+    shutil.rmtree(foreign)
+    try:
+        foreign.symlink_to(source / ".agents" / "skills" / "model-mother", target_is_directory=True)
+    except (OSError, NotImplementedError):
+        return
+    linked = invoke(None, "skills", "install", "--source-checkout", str(source), environment=environment)
+    assert linked.returncode == 2 and not (packages / "assign-advocate").exists()
+    assert json.loads(linked.stderr)["error"] == "conflict"
+
+
+def test_failed_backup_removal_is_visible_and_repeat_install_recovers(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    home, _ = fake_home(tmp_path)
+    monkeypatch.setenv("USERPROFILE", str(home))
+    monkeypatch.setenv("HOME", str(home))
+    source = fake_source(tmp_path)
+    packages = home / ".agents" / "skills"
+    assert skill_install.install_skills(str(source))["all_ready"] is True
+
+    original_rmtree = shutil.rmtree
+
+    def fail_backup(path: Path, *args: object, **kwargs: object) -> None:
+        if str(path).endswith(".backup"):
+            raise OSError("injected backup removal failure")
+        original_rmtree(path, *args, **kwargs)
+
+    with monkeypatch.context() as failure:
+        failure.setattr(skill_install.shutil, "rmtree", fail_backup)
+        with pytest.raises(SetupError, match="skill install failed"):
+            skill_install.install_skills(str(source))
+
+    partial = skill_install.skills_status()
+    assert partial["all_ready"] is False
+    assert all(item["state"] == "ready" for item in partial["skills"])
+    assert len(partial["partial_stages"]) == 1
+    assert partial["partial_stages"][0]["state"] == "recoverable"
+    stage = Path(partial["partial_stages"][0]["path"])
+    assert (stage / "assign-advocate.backup" / "agent-advocate-install.json").is_file()
+
+    foreign = stage / "foreign.txt"
+    foreign.write_text("keep", encoding="utf-8")
+    assert skill_install.skills_status()["partial_stages"][0]["state"] == "conflict"
+    with pytest.raises(ConflictError, match="unknown content"):
+        skill_install.install_skills(str(source))
+    assert foreign.read_text(encoding="utf-8") == "keep"
+    foreign.unlink()
+
+    target = packages / "assign-advocate"
+    shutil.rmtree(target)
+    original_hash = skill_install._source_hash
+
+    def fail_new_stage(path: Path) -> str:
+        if path.parent.name == "assign-advocate":
+            raise OSError("new staging failed")
+        return original_hash(path)
+
+    with monkeypatch.context() as failure:
+        failure.setattr(skill_install, "_source_hash", fail_new_stage)
+        with pytest.raises(SetupError, match="skill install failed"):
+            skill_install.install_skills(str(source))
+    assert (target / skill_install.MANIFEST_NAME).is_file()
+
+    recovered = skill_install.install_skills(str(source))
+    assert recovered["all_ready"] is True
+    assert recovered["partial_stages"] == []
+    assert sorted(path.name for path in packages.iterdir() if path.is_dir()) == sorted(skill_install.SKILL_NAMES)
+
+
+def test_stale_backup_does_not_replace_newer_refresh(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    home, _ = fake_home(tmp_path)
+    monkeypatch.setenv("USERPROFILE", str(home))
+    monkeypatch.setenv("HOME", str(home))
+    source = fake_source(tmp_path)
+    assert skill_install.install_skills(str(source))["all_ready"] is True
+    parent = home / ".agents" / "skills"
+    target = parent / "assign-advocate"
+    old_backup = tmp_path / "old-backup"
+    shutil.copytree(target, old_backup)
+
+    source_skill = source / ".agents" / "skills" / "assign-advocate" / "SKILL.md"
+    source_skill.write_text(source_skill.read_text(encoding="utf-8") + "\nnewer\n", encoding="utf-8")
+    assert skill_install.install_skills(str(source))["all_ready"] is True
+    newer_manifest = (target / skill_install.MANIFEST_NAME).read_bytes()
+
+    # Recovery of an older interrupted transaction must preserve the target
+    # published by the later successful refresh.
+    stage = parent / ".agent-advocate-stage-old"
+    stage.mkdir()
+    (stage / skill_install._STAGE_OWNER).write_text(skill_install.OWNER + "\n", encoding="utf-8")
+    old_backup.rename(stage / "assign-advocate.backup")
+    assert skill_install.install_skills(str(source))["all_ready"] is True
+    assert (target / skill_install.MANIFEST_NAME).read_bytes() == newer_manifest
+    assert skill_install.skills_status()["all_ready"] is True
+
+
+@pytest.mark.parametrize("kind,retry", [
+    ("candidate", "install"),
+    ("backup", "install"),
+    ("discard", "uninstall"),
+])
+def test_interrupted_stage_cleanup_retries_after_manifest_loss(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, kind: str, retry: str
+) -> None:
+    home, _ = fake_home(tmp_path)
+    monkeypatch.setenv("USERPROFILE", str(home))
+    monkeypatch.setenv("HOME", str(home))
+    source = fake_source(tmp_path)
+    assert skill_install.install_skills(str(source))["all_ready"] is True
+    parent = home / ".agents" / "skills"
+    target = parent / "assign-advocate"
+    stage = parent / ".agent-advocate-stage-interrupted-cleanup"
+    stage.mkdir()
+    (stage / skill_install._STAGE_OWNER).write_text(skill_install.OWNER + "\n", encoding="utf-8")
+    staged = stage / ("assign-advocate" + ("." + kind if kind != "candidate" else ""))
+    shutil.copytree(target, staged)
+    original_rmtree = shutil.rmtree
+
+    def interrupted_delete(path: Path, *args: object, **kwargs: object) -> None:
+        if path == staged:
+            (path / skill_install.MANIFEST_NAME).unlink()
+            raise OSError("interrupted cleanup after manifest loss")
+        original_rmtree(path, *args, **kwargs)
+
+    with monkeypatch.context() as failure:
+        failure.setattr(skill_install.shutil, "rmtree", interrupted_delete)
+        with pytest.raises(SetupError, match="stage recovery failed"):
+            if retry == "install":
+                skill_install.install_skills(str(source))
+            else:
+                skill_install.uninstall_skills()
+
+    status = skill_install.skills_status()
+    assert status["partial_stages"] == [{"path": str(stage), "state": "recoverable"}]
+    assert (target / skill_install.MANIFEST_NAME).is_file()
+    if retry == "install":
+        result = skill_install.install_skills(str(source))
+        assert result["all_ready"] is True
+    else:
+        result = skill_install.uninstall_skills()
+        assert all(item["state"] == "missing" for item in result["skills"])
+    assert result["partial_stages"] == []
+
+
+def test_incomplete_backup_with_missing_target_is_preserved_as_conflict(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    home, _ = fake_home(tmp_path)
+    monkeypatch.setenv("USERPROFILE", str(home))
+    monkeypatch.setenv("HOME", str(home))
+    source = fake_source(tmp_path)
+    assert skill_install.install_skills(str(source))["all_ready"] is True
+    parent = home / ".agents" / "skills"
+    stage = parent / ".agent-advocate-stage-incomplete-backup"
+    stage.mkdir()
+    (stage / skill_install._STAGE_OWNER).write_text(skill_install.OWNER + "\n", encoding="utf-8")
+    backup = stage / "assign-advocate.backup"
+    (parent / "assign-advocate").rename(backup)
+    (backup / skill_install.MANIFEST_NAME).unlink()
+
+    assert skill_install.skills_status()["partial_stages"] == [{"path": str(stage), "state": "conflict"}]
+    with pytest.raises(ConflictError, match="unknown content"):
+        skill_install.install_skills(str(source))
+    with pytest.raises(ConflictError, match="unknown content"):
+        skill_install.uninstall_skills()
+    assert (backup / "SKILL.md").is_file()
+    assert not (parent / "assign-advocate").exists()
+
+
+def test_uninstall_recovers_interrupted_refresh_backup(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    home, _ = fake_home(tmp_path)
+    monkeypatch.setenv("USERPROFILE", str(home))
+    monkeypatch.setenv("HOME", str(home))
+    source = fake_source(tmp_path)
+    assert skill_install.install_skills(str(source))["all_ready"] is True
+    parent = home / ".agents" / "skills"
+    target = parent / "assign-advocate"
+    original_rename = Path.rename
+
+    def interrupt_publish(path: Path, destination: Path) -> Path:
+        if path.name == "assign-advocate" and path.parent.name.startswith(".agent-advocate-stage-"):
+            raise KeyboardInterrupt("interrupted after backup")
+        return original_rename(path, destination)
+
+    with monkeypatch.context() as failure:
+        failure.setattr(Path, "rename", interrupt_publish)
+        with pytest.raises(KeyboardInterrupt):
+            skill_install.install_skills(str(source))
+    assert not target.exists()
+    assert skill_install.skills_status()["partial_stages"][0]["state"] == "recoverable"
+    result = skill_install.uninstall_skills()
+    assert result["partial_stages"] == []
+    assert all(item["state"] == "missing" for item in result["skills"])
+
+
+def test_lock_symlink_and_foreign_file_are_refused_without_write(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    home, _ = fake_home(tmp_path)
+    monkeypatch.setenv("USERPROFILE", str(home))
+    monkeypatch.setenv("HOME", str(home))
+    source = fake_source(tmp_path)
+    parent = home / ".agents" / "skills"
+    parent.mkdir(parents=True)
+    lock = parent / ".agent-advocate-install.lock"
+    foreign = tmp_path / "foreign-lock-target"
+    foreign.write_bytes(b"")
+    try:
+        lock.symlink_to(foreign)
+    except (OSError, NotImplementedError):
+        pass
+    else:
+        with pytest.raises(ConflictError, match="unsafe skill install lock"):
+            skill_install.install_skills(str(source))
+        assert foreign.read_bytes() == b""
+        lock.unlink()
+    lock.write_bytes(b"foreign")
+    with pytest.raises(ConflictError, match="foreign skill install lock"):
+        skill_install.install_skills(str(source))
+    assert lock.read_bytes() == b"foreign"
+
+
+def test_interrupted_pre_manifest_candidate_is_repaired(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    home, _ = fake_home(tmp_path)
+    monkeypatch.setenv("USERPROFILE", str(home))
+    monkeypatch.setenv("HOME", str(home))
+    source = fake_source(tmp_path)
+    original_write = Path.write_text
+
+    def interrupt_manifest(path: Path, data: str, *args: object, **kwargs: object) -> int:
+        if path.name == skill_install.MANIFEST_NAME and path.parent.name == "assign-advocate":
+            raise OSError("interrupted before manifest")
+        return original_write(path, data, *args, **kwargs)
+
+    with monkeypatch.context() as failure:
+        failure.setattr(Path, "write_text", interrupt_manifest)
+        with pytest.raises(SetupError, match="skill install failed"):
+            skill_install.install_skills(str(source))
+
+    partial = skill_install.skills_status()
+    assert partial["all_ready"] is False
+    assert partial["partial_stages"][0]["state"] == "recoverable"
+    stage = Path(partial["partial_stages"][0]["path"])
+    assert (stage / "assign-advocate" / "SKILL.md").is_file()
+    assert not (stage / "assign-advocate" / skill_install.MANIFEST_NAME).exists()
+    assert skill_install.install_skills(str(source))["all_ready"] is True
+
+
+def test_interrupted_initial_owner_marker_write_is_repaired(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    home, _ = fake_home(tmp_path)
+    monkeypatch.setenv("USERPROFILE", str(home))
+    monkeypatch.setenv("HOME", str(home))
+    source = fake_source(tmp_path)
+    original_write = Path.write_text
+
+    def interrupt_owner(path: Path, data: str, *args: object, **kwargs: object) -> int:
+        if path.name == skill_install._STAGE_OWNER:
+            original_write(path, data[:8], *args, **kwargs)
+            raise OSError("interrupted during owner marker write")
+        return original_write(path, data, *args, **kwargs)
+
+    with monkeypatch.context() as failure:
+        failure.setattr(Path, "write_text", interrupt_owner)
+        with pytest.raises(SetupError, match="skill install failed"):
+            skill_install.install_skills(str(source))
+
+    stage_info = skill_install.skills_status()["partial_stages"]
+    assert len(stage_info) == 1 and stage_info[0]["state"] == "recoverable"
+    stage = Path(stage_info[0]["path"])
+    assert (stage / skill_install._STAGE_OWNER).read_bytes() == b"agent-ad"
+    unknown = stage / "unknown.txt"
+    unknown.write_text("keep", encoding="utf-8")
+    assert skill_install.skills_status()["partial_stages"][0]["state"] == "conflict"
+    with pytest.raises(ConflictError, match="unknown content"):
+        skill_install.install_skills(str(source))
+    assert unknown.read_text(encoding="utf-8") == "keep"
+    unknown.unlink()
+    package = stage / "assign-advocate"
+    package.mkdir()
+    (package / "SKILL.md").write_text("keep", encoding="utf-8")
+    assert skill_install.skills_status()["partial_stages"][0]["state"] == "conflict"
+    with pytest.raises(ConflictError, match="unknown content"):
+        skill_install.install_skills(str(source))
+    assert (package / "SKILL.md").read_text(encoding="utf-8") == "keep"
+    shutil.rmtree(package)
+    assert skill_install.install_skills(str(source))["all_ready"] is True
+    assert skill_install.skills_status()["partial_stages"] == []
+
+
+def test_missing_target_backup_is_restored_before_failed_retry(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    home, _ = fake_home(tmp_path)
+    monkeypatch.setenv("USERPROFILE", str(home))
+    monkeypatch.setenv("HOME", str(home))
+    source = fake_source(tmp_path)
+    assert skill_install.install_skills(str(source))["all_ready"] is True
+    target = home / ".agents" / "skills" / "assign-advocate"
+    old_manifest = (target / skill_install.MANIFEST_NAME).read_bytes()
+    original_rename = Path.rename
+
+    def interrupt_publish(path: Path, destination: Path) -> Path:
+        if path.name == "assign-advocate" and path.parent.name.startswith(".agent-advocate-stage-"):
+            raise KeyboardInterrupt("interrupted after backup")
+        return original_rename(path, destination)
+
+    with monkeypatch.context() as failure:
+        failure.setattr(Path, "rename", interrupt_publish)
+        with pytest.raises(KeyboardInterrupt):
+            skill_install.install_skills(str(source))
+    assert not target.exists()
+    assert skill_install.skills_status()["partial_stages"][0]["state"] == "recoverable"
+
+    original_hash = skill_install._source_hash
+
+    def failed_retry(path: Path) -> str:
+        if path.parent.name == "assign-advocate":
+            raise OSError("retry staging failed")
+        return original_hash(path)
+
+    with monkeypatch.context() as failure:
+        failure.setattr(skill_install, "_source_hash", failed_retry)
+        with pytest.raises(SetupError, match="skill install failed"):
+            skill_install.install_skills(str(source))
+    assert (target / skill_install.MANIFEST_NAME).read_bytes() == old_manifest
+    assert skill_install.install_skills(str(source))["all_ready"] is True
+
+
+def test_source_change_during_publication_cannot_return_success(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    home, _ = fake_home(tmp_path)
+    monkeypatch.setenv("USERPROFILE", str(home))
+    monkeypatch.setenv("HOME", str(home))
+    source = fake_source(tmp_path)
+    original_rename = Path.rename
+    source_skill = source / ".agents" / "skills" / "assign-advocate" / "SKILL.md"
+    changed = False
+
+    def change_source(path: Path, destination: Path) -> Path:
+        nonlocal changed
+        result = original_rename(path, destination)
+        if destination.name == "advocate-wrap" and not changed:
+            changed = True
+            source_skill.write_text(source_skill.read_text(encoding="utf-8") + "\nchanged\n", encoding="utf-8")
+        return result
+
+    with monkeypatch.context() as failure:
+        failure.setattr(Path, "rename", change_source)
+        with pytest.raises(SetupError, match="incomplete"):
+            skill_install.install_skills(str(source))
+    assert skill_install.skills_status()["all_ready"] is False
+    assert skill_install.install_skills(str(source))["all_ready"] is True
+
+
+def test_skill_filesystem_error_is_not_reported_as_store_failure(monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]) -> None:
+    def unavailable() -> dict[str, object]:
+        raise OSError("skill path unavailable")
+
+    monkeypatch.setattr(cli, "skills_status", unavailable)
+    assert cli.main(["skills", "status"]) == 2
+    output = capsys.readouterr()
+    assert output.out == ""
+    assert json.loads(output.err) == {
+        "error": "setup_error", "message": "skill filesystem operation failed: skill path unavailable"
+    }
+
+
+def test_installed_wrapper_binds_real_cli_from_other_cwd(tmp_path: Path) -> None:
+    home, environment = fake_home(tmp_path)
+    other_project = git_project(tmp_path / "other-project")
+    installed = invoke(None, "skills", "install", "--source-checkout", str(ROOT), environment=environment)
+    assert installed.returncode == 0, installed.stderr
+    package = home / ".agents" / "skills" / "assign-advocate"
+    wrapper = (package / "SKILL.md").read_text(encoding="utf-8")
+    manifest = json.loads((package / "agent-advocate-install.json").read_text(encoding="utf-8"))
+    assert set(manifest) == {"schema_version", "owner", "skill_name", "source_checkout", "source_sha256"}
+    assert manifest["schema_version"] == 1 and manifest["owner"] == "agent-advocate"
+    assert manifest["skill_name"] == "assign-advocate"
+    checkout = Path(manifest["source_checkout"])
+    assert checkout.is_absolute() and checkout.resolve(strict=True) == checkout
+    assert (checkout / "pyproject.toml").is_file() and (checkout / "uv.lock").is_file()
+    source_skill = checkout / ".agents" / "skills" / manifest["skill_name"] / "SKILL.md"
+    contract = checkout / "documentation" / "skill-contract.md"
+    assert wrapper.startswith("---\nname: assign-advocate\n")
+    assert "source_sha256" in wrapper and "documentation/skill-contract.md" in wrapper
+    assert "uv run --project <resolved-checkout> --locked agent-advocate" in wrapper
+    assert "shared contract" in source_skill.read_text(encoding="utf-8")
+    assert "Checkout-bound CLI requests" in contract.read_text(encoding="utf-8")
+    assert hashlib.sha256(source_skill.read_bytes()).hexdigest() == manifest["source_sha256"]
+    assert f"Shared contract SHA-256: `{hashlib.sha256(contract.read_bytes()).hexdigest()}`" in wrapper
+    private = tmp_path / "private"
+    command = ["uv", "run", "--project", str(checkout), "--locked", "agent-advocate", "--data-dir", str(private)]
+    def call(*args: str) -> subprocess.CompletedProcess[str]:
+        return subprocess.run(
+            [*command, *args],
+            cwd=other_project,
+            env=environment,
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+    status = call("skills", "status")
+    assert status.returncode == 0, status.stderr
+    installed_status = json.loads(status.stdout)
+    assert installed_status["all_ready"] is True
+    assert installed_status["partial_stages"] == []
+    assert {item["name"] for item in installed_status["skills"]} == set(skill_install.SKILL_NAMES)
+    assert all(item["state"] == "ready" and item["source_checkout"] == str(checkout) for item in installed_status["skills"])
+    initialized = call("init")
+    assert initialized.returncode == 0, initialized.stderr
+    assert json.loads(initialized.stdout)["data_dir"] == str(private.resolve())
+    request = write_json(private / "run.json", {
+        "project_path": str(other_project), "goal": "Wrong-cwd installed wrapper smoke",
+        "acceptance": ["Fresh status reads the named project"], "non_goals": [],
+        "models": [], "next_check_at": future(), "deadline_at": None,
+    })
+    started = call("start", "--file", str(request))
+    assert started.returncode == 0, started.stderr
+    run_id = json.loads(started.stdout)["run_id"]
+    checked = call("status", run_id)
+    assert checked.returncode == 0, checked.stderr
+    assert json.loads(checked.stdout)["run"]["project_path"] == str(other_project.resolve())
 
 
 def test_real_cli_subprocess_persists_lifecycle_across_fresh_processes(tmp_path: Path) -> None:

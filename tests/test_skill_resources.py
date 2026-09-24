@@ -7,6 +7,7 @@ import re
 import subprocess
 
 from agent_advocate.service import normalize_patterns
+from agent_advocate.skill_install import SKILL_NAMES as INSTALLED_NAMES
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -44,6 +45,7 @@ def _assert_local_links_resolve(path: Path) -> None:
 
 
 def test_five_discoverable_skill_manifests_and_local_resources_resolve() -> None:
+    assert INSTALLED_NAMES == SKILL_NAMES
     skill_root = ROOT / ".agents" / "skills"
     manifests = [skill_root / name / "SKILL.md" for name in SKILL_NAMES]
     assert sorted(path.parent.name for path in skill_root.glob("*/SKILL.md")) == sorted(SKILL_NAMES)
@@ -54,6 +56,7 @@ def test_five_discoverable_skill_manifests_and_local_resources_resolve() -> None
         instructions = path.read_text(encoding="utf-8")
         assert "resolve this physical `SKILL.md` upward" in instructions
         assert PINNED_CLI in instructions
+        assert "installed wrapper" in instructions
         _assert_local_links_resolve(path)
     contract = ROOT / "documentation" / "skill-contract.md"
     _assert_local_links_resolve(contract)
@@ -61,6 +64,8 @@ def test_five_discoverable_skill_manifests_and_local_resources_resolve() -> None
     assert "resolve the physical `SKILL.md` path and walk upward" in contract_text
     assert PINNED_CLI in contract_text
     assert "Do not use a bare or PATH-resolved CLI." in contract_text
+    assert "agent-advocate-install.json" in contract_text
+    assert "source_sha256" in contract_text
 
 
 def test_public_seed_and_model_resources_are_valid_and_generalized() -> None:
