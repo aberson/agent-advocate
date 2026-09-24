@@ -37,13 +37,13 @@ Keep requested model identity separate from observed identity. Missing identity 
 
 ## Development process
 
-Build only the three v0 code steps in plan.md, then the separate live acceptance step. Use focused tests while iterating and the full project suite at completion. A completed integrated-state suite may be cited by its immediately enclosing checkpoint when the tested source, tests, dependencies, configuration, and generated inputs are unchanged; otherwise rerun. This applies the approved duplicate-validation remedy locally and does not change any other project's gates.
+The three v0 code steps are closed; M1 live acceptance remains separate and TODO. The authorized first v1 slice is the user-level skill installer in `documentation/v1-cross-project-skill-access-plan.md`. Run Step 4 as real work monitored by Agent Advocate, then run its Step 5 installed-client acceptance from another repository. Use focused tests while iterating and the full project suite at completion. A completed integrated-state suite may be cited by its immediately enclosing checkpoint when the tested source, tests, dependencies, configuration, and generated inputs are unchanged; otherwise rerun. This applies the approved duplicate-validation remedy locally and does not change any other project's gates.
 
 Require meaningful behavior tests and a real short watchdog observation; do not require increasing test counts or a multi-hour soak. Independently review code changes and the live skill evidence. Repeated repairs should trigger diagnosis under the existing build workflow, preserving its authorized retry budget. Keep reviews tied to defects and acceptance; optional improvements do not expand v0.
 
 ## Current state
 
-The local CLI, version-1 SQLite store, five project-local skills and foreground watchdog are implemented here. The timer is deterministic and model-free; it persists/deduplicates alert conditions but never dispatches a skill or changes a monitored project. Live host skill execution and M1 acceptance remain unobserved. Step status and completion evidence are owned by plan.md.
+The local CLI, version-1 SQLite store, five project-local skills and foreground watchdog are implemented here. The timer is deterministic and model-free; it persists/deduplicates alert conditions but never dispatches a skill or changes a monitored project. M1 acceptance remains TODO until the operator's terminal observation is recorded. The v1 installer plan tracks its own build and installed-client acceptance status; `plan.md` owns v0 status.
 
 ## Environment requirements
 

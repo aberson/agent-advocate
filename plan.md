@@ -182,7 +182,7 @@ External producer basis: official Codex skill documentation describes a `SKILL.m
 | Concurrent writer or watcher failure | SQLite transactions/uniqueness, bounded timeout, visible errors; no silent lost update |
 | No browser or independent agents in a host | Mark actual capability unavailable; do not claim all skills accepted |
 
-v1 candidates: Claude qualification; automatic watchdog-to-diagnostic dispatch; richer review-loop/test-receipt ingestion; Switchboard inventory read; optional existing-observatory summary artifact; and wider skill installation. No v1 issue is an implicit v0 acceptance requirement. No license grant is invented during public setup; a distribution license is a separate owner decision, not a v0 build blocker.
+v1 candidates: Claude qualification; automatic watchdog-to-diagnostic dispatch; richer review-loop/test-receipt ingestion; Switchboard inventory read; optional existing-observatory summary artifact; and wider skill installation. The operator authorized [the user-level cross-project skill installer plan](documentation/v1-cross-project-skill-access-plan.md) as the first v1 build slice and real Agent Advocate work trial. Its status is tracked in that plan; M1 and issue #4 remain separate and open until the operator terminal observation is recorded. No v1 issue is an implicit v0 acceptance requirement. No license grant is invented during public setup; a distribution license is a separate owner decision, not a v0 build blocker.
 
 ## 10. How to Run (after the named build step)
 
