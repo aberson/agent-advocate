@@ -54,7 +54,7 @@ No v1 SQLite schema field, public seed, or watchdog timing constant changes in t
 - **Problem:** A Codex coordinator started outside this checkout cannot discover the five project-local skills for a real project.
 - **Type:** code
 - **Status:** TODO
-- **Issue:** #
+- **Issue:** #7
 - **Flags:** --reviewers deep --isolation worktree
 - **Files:** `src/agent_advocate/cli.py`, new `src/agent_advocate/skill_install.py`, `.agents/skills/*/SKILL.md`, `documentation/skill-contract.md`, `tests/test_skill_resources.py`, `tests/test_cli.py`, `README.md`, new `documentation/v1-cross-project-acceptance.md`
 - **Produces:** user-scoped `skills install/status/uninstall` commands, owned installed packages that resolve the canonical checkout and pinned CLI, collision-safe refresh/removal behavior, tests, user documentation, and the exact Step 5 operator procedure.
@@ -66,7 +66,7 @@ No v1 SQLite schema field, public seed, or watchdog timing constant changes in t
 - **Problem:** Package tests cannot prove that a fresh Codex coordinator in another repository discovers and uses the installed skills.
 - **Type:** operator
 - **Status:** TODO
-- **Issue:** #
+- **Issue:** #8
 - **Files:** `documentation/v1-cross-project-acceptance.md` (read-only procedure), installed user skill packages, external private store
 - **Produces:** private live receipts and a sanitized verdict for host discovery, pinned CLI behavior, independent assessment, a meaningful checkpoint, one visible watcher condition, and wrap retrieval during a bounded real work item.
 - **Done when:** a fresh Codex session starts in an unrelated repository and lists all five user-scoped skills; the first `assign-advocate` invocation resolves the Agent Advocate checkout and registers only the named project; a separate native assessor returns cited evidence; a fresh CLI process retrieves a checkpoint; the foreground watcher is observed in a visible terminal; `advocate-wrap` finishes and a later `brief` retrieves a relevant caution. Any missing capability is recorded as incomplete. No private path, ID, transcript, or evidence excerpt enters the public verdict.
