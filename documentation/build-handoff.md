@@ -1,5 +1,9 @@
 # Build handoff: Agent Advocate after Step 1
 
+**Historical handoff, superseded by [plan.md](../plan.md).** Steps 1–3 are now
+complete on main; M1 live acceptance remains TODO. The status and next-action
+language below records the point when this Step 1 handoff was written.
+
 **Step 1 is accepted under the operator-approved P10 closing exception.** The
 implementation is code commit `27e1ce1`; the [acceptance receipt](step-1-closure.md)
 records the reused Windows suite, actual Linux FIFO test and independent closing
