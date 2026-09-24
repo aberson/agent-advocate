@@ -15,7 +15,7 @@
 
 **In:** a user-scoped installer, status check, and removal path for the five skills; self-contained installed skill metadata that identifies the source checkout; collision-safe updates; documentation for a coordinator started in another repository; and a fresh Codex live trial from an unrelated repository. All generated request files and runtime records stay outside Git worktrees.
 
-**Out:** a hosted plugin, admin-wide installation, a new model API client, automatic build dispatch, automatic watchdog-to-skill dispatch, changes to the monitored repository during installation, and claims of long-term productivity improvement. The remaining v1 candidates receive separate scoped plans after this first trial.
+**Out:** a hosted plugin, admin-wide installation, a new model API client, timer-driven build dispatch, automatic watchdog-to-skill dispatch, changes to the monitored repository during installation, and claims of long-term productivity improvement. The remaining v1 candidates receive separate scoped plans after this first trial.
 
 ## 4. Impact Analysis
 
@@ -26,7 +26,7 @@
 | `.agents/skills/*/SKILL.md` | extend | Keep source packages and generated user packages tied to the same pinned checkout contract | `rg` found the checkout-resolution instruction in all five packages |
 | `documentation/skill-contract.md` | extend | Define source versus installed skill resolution and the installed package manifest | `rg` found its references in all five source packages and `tests/test_skill_resources.py` |
 | `tests/test_skill_resources.py`, `tests/test_cli.py` | extend | Verify package metadata, collision safety, wrong-cwd CLI use, refresh, and uninstall | Read both test modules; their current assertions cover source package links and the pinned CLI |
-| `README.md` | extend | Show installation and a real-project coordinator prompt | Read current quick start and project-local skill sections |
+| `README.md` | extend | Show installation and the reusable `$assign-advocate` invocation for real work | Read current quick start and project-local skill sections |
 | `documentation/v1-cross-project-acceptance.md` | add | Author the exact fresh-session installed-client procedure before operator Step 5 | New document; the v0 procedure is `documentation/acceptance.md` and covers project-local skills only |
 
 No v1 SQLite schema field, public seed, or watchdog timing constant changes in this slice. Before changing any existing function signature or shared constant, the implementation step must enumerate every call site with `rg` and update the impact record.
@@ -45,7 +45,7 @@ No v1 SQLite schema field, public seed, or watchdog timing constant changes in t
 
 **Ownership and privacy.** Installation writes no run data. The local pointer is private user configuration; public repository files contain no user-specific absolute paths. Installation, refresh, and removal must preserve unrelated skill packages and fail visibly on collisions or incomplete writes.
 
-**Live proof.** A package on disk is insufficient. The operator step starts a fresh Codex session in a different repository, verifies host discovery of all five names, invokes `assign-advocate` for one bounded real work item there, and checks the pinned CLI, independent assessment, checkpoint, watch, and wrap receipts. The test records friction and useful findings separately from any productivity claim.
+**Live proof.** A package on disk is insufficient. The operator step starts a fresh Codex session in a different repository, verifies host discovery of all five names, invokes `$assign-advocate` as the coordinator entry point for one bounded real work item there, and checks the pinned CLI, independent assessment, checkpoint, watch, and wrap receipts. The test records friction and useful findings separately from any productivity claim.
 
 ## 7. Build Steps
 
@@ -69,7 +69,7 @@ No v1 SQLite schema field, public seed, or watchdog timing constant changes in t
 - **Issue:** #8
 - **Files:** `documentation/v1-cross-project-acceptance.md` (read-only procedure), installed user skill packages, external private store
 - **Produces:** private live receipts and a sanitized verdict for host discovery, pinned CLI behavior, independent assessment, a meaningful checkpoint, one visible watcher condition, and wrap retrieval during a bounded real work item.
-- **Done when:** a fresh Codex session starts in an unrelated repository and lists all five user-scoped skills; the first `assign-advocate` invocation resolves the Agent Advocate checkout and registers only the named project; a separate native assessor returns cited evidence; a fresh CLI process retrieves a checkpoint; the foreground watcher is observed in a visible terminal; `advocate-wrap` finishes and a later `brief` retrieves a relevant caution. Any missing capability is recorded as incomplete. No private path, ID, transcript, or evidence excerpt enters the public verdict.
+- **Done when:** a fresh Codex session starts in an unrelated repository and lists all five user-scoped skills; the first `$assign-advocate` invocation resolves the Agent Advocate checkout, registers only the named project, and establishes the coordination lifecycle; a separate native assessor returns cited evidence; a fresh CLI process retrieves a checkpoint; the foreground watcher is observed in a visible terminal; `advocate-wrap` finishes and a later `brief` retrieves a relevant caution. Any missing capability is recorded as incomplete. No private path, ID, transcript, or evidence excerpt enters the public verdict.
 - **Depends on:** 4
 
 ## 8. Risks and Open Questions
@@ -95,9 +95,9 @@ uv run --project <agent-advocate-checkout> --locked agent-advocate skills instal
 uv run --project <agent-advocate-checkout> --locked agent-advocate skills status
 ```
 
-`<agent-advocate-checkout>` means the same existing absolute source directory in both positions. Start a fresh Codex session in the unrelated target repository after installation; ask the host to list the five skills before invoking one. Keep its run request files and SQLite store under an external private directory.
+`<agent-advocate-checkout>` means the same existing absolute source directory in both positions. Start a fresh Codex session in the unrelated target repository after installation; ask the host to list the five skills, then invoke `$assign-advocate for <named work>` with the target and acceptance. Keep its run request files and SQLite store under an external private directory.
 
-Step 4 itself is the first real v1 build monitored by Agent Advocate: register the Step 4 run in an external private store before build dispatch; keep its assessment, checkpoints, watch output, review-route observations, and wrap there. Step 4 authors `documentation/v1-cross-project-acceptance.md` with exact preconditions, request templates, commands, observation points, stop and cleanup, and a sanitized result format. Step 5 (M2) runs that procedure in a fresh host session in an unrelated repository for one bounded work item selected there. This slice adds no autonomous timer behavior and no data producer-consumer schema change, so no long soak or new schema migration is required. The existing foreground watcher is observed during the live step; it is not a substitute for host discovery.
+Step 4 itself is the first real v1 build monitored by Agent Advocate: invoke `$assign-advocate` in this checkout for Step 4, reuse its external private run, and keep its assessment, checkpoints, watch output, review-route observations, and wrap there. Step 4 authors `documentation/v1-cross-project-acceptance.md` with exact preconditions, request templates, commands, observation points, stop and cleanup, and a sanitized result format. Step 5 (M2) runs that procedure in a fresh host session in an unrelated repository for one bounded work item selected there. This slice adds no autonomous timer behavior and no data producer-consumer schema change, so no long soak or new schema migration is required. The existing foreground watcher is observed during the live step; it is not a substitute for host discovery.
 
 ## 10. Subsequent V1 Candidates
 

@@ -5,6 +5,10 @@ instructions for a host agent. They invoke the checkout-bound CLI below and
 native host tools; the Python package does not dispatch a model, operate a
 server, or grant access to a web or agent capability.
 
+`assign-advocate` is the reusable coordinator entry point for named work. It
+uses the other skills as the run progresses; invoking it does not itself prove
+that a build ran, a review passed, or the visible watcher was observed.
+
 This contract is public. Runtime data, absolute project paths, host/session
 receipts, copied evidence, and temporary request files remain in the external
 private data directory described in [privacy.md](privacy.md). Examples below

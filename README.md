@@ -75,11 +75,19 @@ opened without waiting for a writer and rejected as `not-regular`.
 Codex discovers the five project-owned packages under `.agents/skills/` when its
 project-skill discovery is available:
 
-- `assign-advocate` starts/resumes advocacy and records required-review readiness.
+- `assign-advocate` is the coordinator entry point for named work: it starts or
+  resumes the run, checks review readiness, and routes later checkpoints,
+  alerts, and closeout to the other skills.
 - `status-inquisition` performs a neutral checkpoint assessment.
 - `coordination-cowbell` investigates an escalation without taking control actions.
 - `model-mother` performs explicit, scoped model research.
 - `advocate-wrap` reconciles evidence and closes a run.
+
+From this checkout, start a fresh Codex session and invoke
+`$assign-advocate for <named work>`. Give it the target project and acceptance
+or point it at the relevant plan step. It can prepare a run for later execution
+or coordinate work the user has asked to run. The five skills are still
+project-local until the v1 user-level installer is built and live-checked.
 
 Their shared [skill contract](documentation/skill-contract.md) defines the v1
 CLI request shapes, synthetic capability examples, source-provenance rules, and
