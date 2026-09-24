@@ -15,8 +15,9 @@ working directory or the skill checkout.
    the user wants setup only or execution now. Reuse a matching existing run;
    otherwise create its request files and private store outside every Git
    worktree before invoking the CLI. Keep a private run pointer for resumption,
-   and retrieve the bounded brief. Ask for a missing work item or target rather
-   than choosing one silently.
+   and retrieve the bounded brief. If the user asks to resume but the pointer
+   cannot be located, ask for it instead of creating a duplicate run. Ask for
+   a missing work item or target rather than choosing one silently.
 2. Inspect the named required review route against actual loaded adapters,
    referenced helpers, and host capabilities. Check fresh dispatch, observable
    role/model availability, required parent-only authority, helpers, and
