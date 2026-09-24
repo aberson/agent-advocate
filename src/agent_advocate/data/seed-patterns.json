@@ -1,0 +1,80 @@
+[
+  {
+    "pattern_key": "repeated-validation",
+    "summary": "Repeated validation without a newly named defect can consume delivery time without improving confidence.",
+    "trigger": "A coordinator proposes another unchanged validation cycle.",
+    "scope": {"roles": [], "models": [], "hosts": [], "tags": []},
+    "basis": "official-guidance",
+    "sources": [{"kind": "public-url", "locator": "https://developers.openai.com/blog/rethinking-skills-and-prompts-for-gpt-6-astra", "captured_at": "2026-09-11T00:00:00Z", "excerpt": null, "sha256": null}],
+    "owner": "coordinator",
+    "action": "Name the changed input or unresolved acceptance defect before repeating validation.",
+    "disposition": "monitoring",
+    "review_after": "2026-12-01",
+    "reason": "Generalized public guidance; not a claim about a private project."
+  },
+  {
+    "pattern_key": "review-churn-without-new-evidence",
+    "summary": "Repeated review requests without new evidence can turn a hypothesis into unsupported churn.",
+    "trigger": "A review route is retried after the same refusal or unchanged finding.",
+    "scope": {"roles": ["reviewer"], "models": [], "hosts": [], "tags": []},
+    "basis": "official-guidance",
+    "sources": [{"kind": "public-url", "locator": "https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/prompting-claude-fable-5", "captured_at": "2026-09-23T00:00:00Z", "excerpt": null, "sha256": null}],
+    "owner": "required-review owner",
+    "action": "Record the refusal, identify its owning repair, and retry only after a prerequisite changes.",
+    "disposition": "candidate",
+    "review_after": "2026-12-01",
+    "reason": "Candidate caution derived from public prompt-engineering guidance; confirm locally before treating it as a rule."
+  },
+  {
+    "pattern_key": "scope-growth-beyond-acceptance",
+    "summary": "A useful optional improvement can still expand work beyond the agreed acceptance target.",
+    "trigger": "A proposed change is not needed to meet the named acceptance criteria.",
+    "scope": {"roles": [], "models": [], "hosts": [], "tags": []},
+    "basis": "official-guidance",
+    "sources": [{"kind": "public-url", "locator": "https://developers.openai.com/plugins/build/skills", "captured_at": "2026-09-23T00:00:00Z", "excerpt": null, "sha256": null}],
+    "owner": "coordinator",
+    "action": "Keep the change out of the current run or obtain separate authorization.",
+    "disposition": "candidate",
+    "review_after": "2026-12-01",
+    "reason": "Candidate planning caution; it does not prohibit authorized follow-on work."
+  },
+  {
+    "pattern_key": "environment-resource-failure",
+    "summary": "A missing host resource or capability can be mistaken for a code defect.",
+    "trigger": "A workflow fails before its required host resource can be inspected or invoked.",
+    "scope": {"roles": [], "models": [], "hosts": [], "tags": []},
+    "basis": "official-guidance",
+    "sources": [{"kind": "public-url", "locator": "https://developers.openai.com/api/docs/guides/tools-skills", "captured_at": "2026-09-23T00:00:00Z", "excerpt": null, "sha256": null}],
+    "owner": "host or adapter owner",
+    "action": "Classify the missing resource separately and give its owner a repair action.",
+    "disposition": "monitoring",
+    "review_after": "2026-12-01",
+    "reason": "Public capability-directory guidance; route-specific availability still needs direct evidence."
+  },
+  {
+    "pattern_key": "high-effort-needs-model-specific-assessment",
+    "summary": "High-effort behavior should be assessed against dated, model-specific evidence rather than a family label.",
+    "trigger": "A coordinator proposes a broad claim about a model family's effort behavior.",
+    "scope": {"roles": [], "models": [], "hosts": [], "tags": []},
+    "basis": "official-guidance",
+    "sources": [{"kind": "public-url", "locator": "https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/prompting-claude-fable-5", "captured_at": "2026-09-23T00:00:00Z", "excerpt": null, "sha256": null}],
+    "owner": "research requester",
+    "action": "Research the exact requested model from current official sources and preserve scope and date.",
+    "disposition": "candidate",
+    "review_after": "2026-12-01",
+    "reason": "Candidate caution; family labels in this repository are explicitly not resolved model claims."
+  },
+  {
+    "pattern_key": "required-review-unavailable",
+    "summary": "A required review gate cannot run on the selected host until a usable route is evidenced.",
+    "trigger": "A required review route lacks fresh dispatch, a required helper, authority, capacity, or an accepted adapter contract.",
+    "scope": {"roles": ["reviewer"], "models": [], "hosts": [], "tags": []},
+    "basis": "official-guidance",
+    "sources": [{"kind": "public-url", "locator": "https://developers.openai.com/api/docs/guides/tools-skills", "captured_at": "2026-09-23T00:00:00Z", "excerpt": null, "sha256": null}],
+    "owner": "required-review owner",
+    "action": "Record available, unavailable, or unknown with direct evidence; do not silently downgrade the gate.",
+    "disposition": "monitoring",
+    "review_after": "2026-12-01",
+    "reason": "Generalized public caution; each actual route needs a current host-specific receipt."
+  }
+]

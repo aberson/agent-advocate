@@ -4,7 +4,7 @@
 
 **Objective:** help a coding coordinator finish useful work by surfacing evidenced delivery problems before work, at normal checkpoints, and after work, with a simple timer that makes overdue expectations visible.
 
-**Status:** Step 1 DONE under the operator-approved closing exception P10; code `27e1ce1`, completed Windows suite, actual Linux FIFO regression and one independent closing review. See [the acceptance receipt](documentation/step-1-closure.md). Steps 2/3/M1 remain TODO. The selected Codex review route is qualified and active. The five-skill v0, SQLite, configurable 60-second timer, Codex first, public repository and private runtime storage were approved on 2026-09-22. No repeated approval of those defaults is needed.
+**Status:** Steps 1 and 2 are DONE; Step 1 closed under operator-approved P10, and Step 2 passed the declared isolated code-review gate. Step 3 and M1 remain TODO. The selected Codex review route is qualified and active. The five-skill v0, SQLite, configurable 60-second timer, Codex first, public repository and private runtime storage were approved on 2026-09-22. No repeated approval of those defaults is needed.
 
 **Release sequence:** repair the selected build workflow's review prerequisite, resume the preserved v0 work, use v0 during selected v1 work, then resume the broader separately approved Skill Mesh improvements. Agent Advocate's product has no runtime dependency on Skill Mesh, Switchboard, or an observatory. The current workspace's chosen Codex build workflow needs the specific shared review repair described in section 11; other qualified build workflows need not depend on Skill Mesh. No broad v1 build or unrelated Skill Mesh work is authorized by this v0 plan.
 
@@ -303,7 +303,7 @@ the completed receipts also cover their identical integrated state. See the
 
 - **Problem:** Persisted records need actual host-invoked advocacy, research and closeout workflows.
 - **Type:** code
-- **Status:** TODO
+- **Status:** DONE (2026-09-23)
 - **Issue:** #2
 - **Flags:** --reviewers code --isolation worktree
 - **Files:** `.agents/skills/assign-advocate/SKILL.md`; `.agents/skills/status-inquisition/SKILL.md`; `.agents/skills/coordination-cowbell/SKILL.md`; `.agents/skills/model-mother/SKILL.md`; `.agents/skills/advocate-wrap/SKILL.md`; `documentation/skill-contract.md`; `data/seed-patterns.json`; `data/model-families.json`; `src/agent_advocate/service.py`; `src/agent_advocate/cli.py`; `tests/test_patterns.py`; `tests/test_skill_resources.py`; `README.md`; `plan.md` (status/evidence only).

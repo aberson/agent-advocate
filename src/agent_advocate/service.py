@@ -6,6 +6,7 @@ from collections.abc import Iterator
 import contextlib
 from datetime import UTC, date, datetime
 import hashlib
+from importlib.resources import as_file, files
 import json
 import os
 from pathlib import Path
@@ -42,7 +43,6 @@ PATTERN_DISPOSITIONS = {"candidate", "monitoring", "fix-applied", "retired", "di
 OUTCOMES = {"completed", "stopped", "abandoned"}
 PATTERN_KEY = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
 SHA256 = re.compile(r"^[0-9a-f]{64}$")
-DEFAULT_SEED_FILE = Path(__file__).resolve().parents[2] / "data" / "seed-patterns.json"
 
 
 def new_uuid() -> str:
@@ -81,17 +81,31 @@ def _unique_object(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
 def initialize(store: Store, seed_file: Path | None = None) -> dict[str, Any]:
     store.initialize()
     imported = 0
-    public_seed_file = seed_file or DEFAULT_SEED_FILE
-    try:
-        seed_exists = public_seed_file.exists()
-    except OSError as error:
-        raise StoreUnavailableError(f"cannot inspect public seed file: {error}") from error
-    if seed_exists:
-        if not public_seed_file.is_file():
+    if seed_file is None:
+        try:
+            resource = files("agent_advocate").joinpath("data", "seed-patterns.json")
+            if not resource.is_file():
+                raise StoreUnavailableError("packaged public seed file is missing")
+            with as_file(resource) as packaged_seed_file:
+                value = read_json_file(str(packaged_seed_file))
+        except (ModuleNotFoundError, OSError) as error:
+            raise StoreUnavailableError(f"cannot read packaged public seed file: {error}") from error
+    else:
+        try:
+            seed_exists = seed_file.exists()
+        except OSError as error:
+            raise StoreUnavailableError(f"cannot inspect public seed file: {error}") from error
+        if not seed_exists:
+            return {
+                "data_dir": str(store.data_dir),
+                "schema_version": SCHEMA_VERSION,
+                "seed_patterns_imported": imported,
+            }
+        if not seed_file.is_file():
             raise StoreUnavailableError("public seed path must name a regular file")
-        value = read_json_file(str(public_seed_file))
-        patterns = normalize_patterns(value)
-        _, imported = store.import_patterns(patterns, utc_now(), [new_uuid() for _ in patterns])
+        value = read_json_file(str(seed_file))
+    patterns = normalize_patterns(value)
+    _, imported = store.import_patterns(patterns, utc_now(), [new_uuid() for _ in patterns])
     return {
         "data_dir": str(store.data_dir),
         "schema_version": SCHEMA_VERSION,
@@ -353,6 +367,14 @@ def normalize_observation(value: Any) -> dict[str, Any]:
     analysis_kind = obj["analysis_kind"]
     if analysis_kind not in ANALYSIS_KINDS:
         raise RequestError("analysis_kind must be independent, coordinator, or none")
+    assessor_id = _nullable_string(obj.get("assessor_id"), "assessor_id")
+    if analysis_kind == "independent" and assessor_id is None:
+        raise RequestError("independent analysis_kind requires a nonempty assessor_id")
+    evidence = _evidence_list(obj["evidence"], "evidence")
+    if analysis_kind == "independent" and not any(
+        item["kind"] == "host-result" for item in evidence
+    ):
+        raise RequestError("independent analysis_kind requires a host-result evidence receipt")
     pattern_key = obj.get("pattern_key")
     if pattern_key is not None:
         _pattern_key(pattern_key)
@@ -360,11 +382,11 @@ def normalize_observation(value: Any) -> dict[str, Any]:
         "observation_id": _uuid_or_new(obj.get("observation_id"), "observation_id"),
         "statement": _nonempty(obj["statement"], "statement"),
         "basis": basis,
-        "evidence": _evidence_list(obj["evidence"], "evidence"),
+        "evidence": evidence,
         "pattern_key": pattern_key,
         "recommendation": _nullable_string(obj.get("recommendation"), "recommendation"),
         "analysis_kind": analysis_kind,
-        "assessor_id": _nullable_string(obj.get("assessor_id"), "assessor_id"),
+        "assessor_id": assessor_id,
         "supersedes": _nullable_uuid(obj.get("supersedes"), "supersedes"),
     }
 

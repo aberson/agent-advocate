@@ -1,0 +1,10 @@
+{
+  "schema_version": 1,
+  "families": [
+    {"label": "Astra", "kind": "user-editable-family-label", "note": "Not a resolved model or version claim."},
+    {"label": "Terra", "kind": "user-editable-family-label", "note": "Not a resolved model or version claim."},
+    {"label": "Sol", "kind": "user-editable-family-label", "note": "Not a resolved model or version claim."},
+    {"label": "Fable", "kind": "user-editable-family-label", "note": "Not a resolved model or version claim."},
+    {"label": "Opus", "kind": "user-editable-family-label", "note": "Not a resolved model or version claim."}
+  ]
+}

@@ -114,7 +114,7 @@ def test_real_cli_subprocess_persists_lifecycle_across_fresh_processes(tmp_path:
             "statement": "The receipt exists",
             "basis": "measured",
             "evidence": [{"kind": "local", "locator": str(receipt), "captured_at": future(), "excerpt": None, "sha256": None}],
-            "pattern_key": None,
+            "pattern_key": "cli-wiring",
             "recommendation": None,
             "analysis_kind": "none",
             "assessor_id": None,
@@ -163,6 +163,31 @@ def test_real_cli_subprocess_persists_lifecycle_across_fresh_processes(tmp_path:
     briefed = invoke(private, "brief", run_id)
     assert briefed.returncode == 0, briefed.stderr
     assert json.loads(briefed.stdout)["patterns"][0]["pattern_key"] == "cli-wiring"
+    correction_file = write_json(
+        tmp_path / "correction-observation.json",
+        {
+            "observation_id": str(uuid.uuid4()),
+            "statement": "The named CLI wiring correction was applied",
+            "basis": "measured",
+            "evidence": [
+                {
+                    "kind": "host-result",
+                    "locator": "synthetic://cli-wiring/correction-receipt",
+                    "captured_at": future(),
+                    "excerpt": None,
+                    "sha256": None,
+                }
+            ],
+            "pattern_key": "cli-wiring",
+            "recommendation": "Use the corrected CLI wiring.",
+            "analysis_kind": "coordinator",
+            "assessor_id": None,
+            "supersedes": observed_record["observation_id"],
+        },
+    )
+    correction = invoke(private, "observe", run_id, "--file", str(correction_file))
+    assert correction.returncode == 0, correction.stderr
+    correction_record = json.loads(correction.stdout)
     revised = invoke(
         private,
         "pattern",
@@ -172,11 +197,11 @@ def test_real_cli_subprocess_persists_lifecycle_across_fresh_processes(tmp_path:
         "--reason",
         "Exercise disposition wiring",
         "--evidence",
-        observed_record["observation_id"],
+        correction_record["observation_id"],
     )
     assert revised.returncode == 0, revised.stderr
     assert json.loads(revised.stdout)["pattern"]["disposition"] == "fix-applied"
-    assert json.loads(revised.stdout)["pattern"]["disposition_evidence"] == observed_record["observation_id"]
+    assert json.loads(revised.stdout)["pattern"]["disposition_evidence"] == correction_record["observation_id"]
     finished = invoke(private, "finish", run_id, "--outcome", "completed", "--summary", "Done")
     assert finished.returncode == 0 and json.loads(finished.stdout)["run"]["state"] == "finished"
     assert json.loads(
@@ -205,6 +230,112 @@ def test_invalid_json_error_is_machine_readable(tmp_path: Path) -> None:
     result = invoke(private, "start", "--file", str(broken))
     assert result.returncode == 2 and result.stdout == ""
     assert json.loads(result.stderr)["error"] == "request_error"
+
+
+def test_independent_observation_requires_identity_and_host_receipt_through_cli(tmp_path: Path) -> None:
+    private = tmp_path / "private"
+    project = git_project(tmp_path / "project")
+    assert invoke(private, "init").returncode == 0
+    run_file = write_json(
+        tmp_path / "run.json",
+        {
+            "project_path": str(project),
+            "goal": "Reject unproven independent provenance",
+            "acceptance": ["The invalid observation is visible"],
+            "non_goals": [],
+            "models": [],
+            "next_check_at": future(),
+            "deadline_at": None,
+        },
+    )
+    started = invoke(private, "start", "--file", str(run_file))
+    assert started.returncode == 0, started.stderr
+    observation_file = write_json(
+        tmp_path / "invalid-independent-observation.json",
+        {
+            "observation_id": str(uuid.uuid4()),
+            "statement": "An independent assessor allegedly returned a result",
+            "basis": "reported",
+            "evidence": [],
+            "pattern_key": None,
+            "recommendation": None,
+            "analysis_kind": "independent",
+            "assessor_id": None,
+            "supersedes": None,
+        },
+    )
+    result = invoke(
+        private,
+        "observe",
+        json.loads(started.stdout)["run_id"],
+        "--file",
+        str(observation_file),
+    )
+    assert result.returncode == 2 and result.stdout == ""
+    assert json.loads(result.stderr) == {
+        "error": "request_error",
+        "message": "independent analysis_kind requires a nonempty assessor_id",
+    }
+    local_claim = project / "coordinator-claim.txt"
+    local_claim.write_text("A coordinator claim is not independent provenance.", encoding="utf-8")
+    non_host_evidence = json.loads(observation_file.read_text(encoding="utf-8"))
+    non_host_evidence["observation_id"] = str(uuid.uuid4())
+    non_host_evidence["assessor_id"] = "synthetic-independent-assessor"
+    non_host_evidence["evidence"] = [
+        {
+            "kind": "local",
+            "locator": str(local_claim),
+            "captured_at": future(),
+            "excerpt": None,
+            "sha256": None,
+        },
+        {
+            "kind": "public-url",
+            "locator": "https://example.invalid/coordinator-claim",
+            "captured_at": future(),
+            "excerpt": None,
+            "sha256": None,
+        },
+    ]
+    non_host_evidence_file = write_json(
+        tmp_path / "non-host-independent-observation.json", non_host_evidence
+    )
+    non_host_evidence_result = invoke(
+        private,
+        "observe",
+        json.loads(started.stdout)["run_id"],
+        "--file",
+        str(non_host_evidence_file),
+    )
+    assert non_host_evidence_result.returncode == 2 and non_host_evidence_result.stdout == ""
+    assert json.loads(non_host_evidence_result.stderr) == {
+        "error": "request_error",
+        "message": "independent analysis_kind requires a host-result evidence receipt",
+    }
+    accepted = dict(non_host_evidence)
+    accepted["observation_id"] = str(uuid.uuid4())
+    accepted["evidence"] = [
+        {
+            "kind": "host-result",
+            "locator": "synthetic://independent-assessor/returned-receipt",
+            "captured_at": future(),
+            "excerpt": None,
+            "sha256": None,
+        }
+    ]
+    accepted_file = write_json(tmp_path / "independent-observation.json", accepted)
+    accepted_result = invoke(
+        private,
+        "observe",
+        json.loads(started.stdout)["run_id"],
+        "--file",
+        str(accepted_file),
+    )
+    assert accepted_result.returncode == 0, accepted_result.stderr
+    persisted = json.loads(accepted_result.stdout)["observation"]
+    assert persisted["analysis_kind"] == "independent"
+    assert persisted["assessor_id"] == "synthetic-independent-assessor"
+    assert persisted["evidence"][0]["kind"] == "host-result"
 
 
 def test_deeply_nested_json_is_a_machine_readable_request_error(tmp_path: Path) -> None:

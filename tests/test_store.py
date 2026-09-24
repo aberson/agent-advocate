@@ -495,7 +495,38 @@ def test_pattern_import_preserves_private_disposition_and_brief_is_bounded(tmp_p
     changed, count = import_patterns(store, patterns)
     assert count == 8
     assert len(changed) == 8
-    revised = set_pattern_disposition(store, "pattern-0", "fix-applied", "Private receipt")
+    original = observation_spec(
+        str(uuid.uuid4()),
+        [
+            {
+                "kind": "host-result",
+                "locator": "synthetic://pattern-0/original-receipt",
+                "captured_at": future(),
+                "excerpt": None,
+                "sha256": None,
+            }
+        ],
+    )
+    original["pattern_key"] = "pattern-0"
+    observe(store, run["run_id"], original)
+    correction = observation_spec(
+        str(uuid.uuid4()),
+        [
+            {
+                "kind": "host-result",
+                "locator": "synthetic://pattern-0/correction-receipt",
+                "captured_at": future(),
+                "excerpt": None,
+                "sha256": None,
+            }
+        ],
+    )
+    correction["pattern_key"] = "pattern-0"
+    correction["supersedes"] = original["observation_id"]
+    observe(store, run["run_id"], correction)
+    revised = set_pattern_disposition(
+        store, "pattern-0", "fix-applied", "Private receipt", correction["observation_id"]
+    )
     assert revised["disposition"] == "fix-applied"
     changed, count = import_patterns(store, patterns)
     assert count == 0

@@ -566,12 +566,40 @@ class Store:
             ).fetchone()
             if row is None:
                 raise RequestError("unknown pattern_key")
+            evidence: dict[str, Any] | None = None
+            if disposition == "fix-applied" and evidence_id is None:
+                raise RequestError(
+                    "fix-applied disposition requires --evidence naming a correction observation"
+                )
             if evidence_id:
-                evidence = conn.execute(
-                    "SELECT observation_id FROM observations WHERE observation_id = ?", (evidence_id,)
+                evidence_row = conn.execute(
+                    "SELECT data_json FROM observations WHERE observation_id = ?", (evidence_id,)
                 ).fetchone()
-                if evidence is None:
+                if evidence_row is None:
                     raise RequestError("--evidence must name an existing observation")
+                evidence = json_value(evidence_row["data_json"])
+            if disposition == "fix-applied":
+                assert evidence is not None
+                if evidence["supersedes"] is None:
+                    raise RequestError(
+                        "fix-applied --evidence must name a correction observation"
+                    )
+                if evidence["pattern_key"] != key:
+                    raise RequestError(
+                        "fix-applied correction observation must use the pattern_key"
+                    )
+                superseded_row = conn.execute(
+                    "SELECT data_json FROM observations WHERE observation_id = ?",
+                    (evidence["supersedes"],),
+                ).fetchone()
+                if superseded_row is None or json_value(superseded_row["data_json"])["pattern_key"] != key:
+                    raise RequestError(
+                        "fix-applied correction must supersede an observation for the pattern_key"
+                    )
+                if not evidence["evidence"]:
+                    raise RequestError(
+                        "fix-applied correction observation must include evidence"
+                    )
             pattern = json_value(row["data_json"])
             if (
                 pattern["disposition"] == disposition
