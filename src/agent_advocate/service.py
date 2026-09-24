@@ -41,6 +41,7 @@ EVIDENCE_KINDS = {"local", "public-url", "host-result"}
 PATTERN_BASES = {"local-observation", "official-guidance", "community-report"}
 PATTERN_DISPOSITIONS = {"candidate", "monitoring", "fix-applied", "retired", "dismissed"}
 OUTCOMES = {"completed", "stopped", "abandoned"}
+ALERT_ACTIONS = {"acknowledge", "dismiss", "snooze"}
 PATTERN_KEY = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
 SHA256 = re.compile(r"^[0-9a-f]{64}$")
 
@@ -192,10 +193,12 @@ def status(store: Store, run_id: str) -> dict[str, Any]:
                 )
     return {
         "run": run,
+        "overdue_conditions": _overdue_conditions(run),
+        "state_segments": store.state_segments_for_run(run_id),
         "latest_checkpoint": store.latest_checkpoint(run_id),
         "observations": [public_observation(item) for item in stored_observations],
         "evidence_availability": availability,
-        "alerts": [],
+        "alerts": store.alerts_for_run(run_id),
     }
 
 
@@ -206,7 +209,56 @@ def finish(
     if outcome not in OUTCOMES:
         raise RequestError("outcome must be completed, stopped, or abandoned")
     _nonempty(summary, "summary")
-    return store.finish(run_id, {"outcome": outcome, "summary": summary}, now or utc_now(), new_uuid())
+    return store.finish(run_id, {"outcome": outcome, "summary": summary}, now, new_uuid())
+
+
+def evaluate_alerts(
+    store: Store, run_id: str, now: str | None = None
+) -> tuple[dict[str, Any], list[dict[str, Any]]]:
+    """Evaluate one run with a supplied clock, without any model work."""
+
+    _uuid(run_id, "run_id")
+    timestamp = now or utc_now()
+    try:
+        parse_utc_timestamp(timestamp)
+    except ValueError as error:
+        raise RequestError("watch clock must be an RFC3339 UTC timestamp ending in Z") from error
+    run = store.run(run_id)
+    if run is None:
+        raise RequestError("unknown run_id")
+    # Import lazily so watch can call this service function for its foreground
+    # loop without a module-import cycle.
+    from .watch import due_conditions
+
+    conditions = [condition.as_dict() for condition in due_conditions(run, timestamp)]
+    return store.record_due_alerts(run_id, conditions, timestamp)
+
+
+def revise_alert(
+    store: Store,
+    alert_id: str,
+    action: str,
+    reason: str,
+    until: str | None = None,
+    now: str | None = None,
+) -> dict[str, Any]:
+    _uuid(alert_id, "alert_id")
+    if action not in ALERT_ACTIONS:
+        raise RequestError("alert action must be acknowledge, dismiss, or snooze")
+    _nonempty(reason, "reason")
+    timestamp = now or utc_now()
+    if action == "snooze":
+        if until is None:
+            raise RequestError("snooze requires --until with a future UTC timestamp")
+        normalized_until = _timestamp(until, "until")
+        _require_future(normalized_until, timestamp, "until")
+    else:
+        if until is not None:
+            raise RequestError("--until is only valid with --action snooze")
+        normalized_until = None
+    # The store checks the future boundary again after obtaining the write
+    # lock. A real request can wait for that lock long enough to expire.
+    return store.revise_alert(alert_id, action, reason, normalized_until, now)
 
 
 def import_patterns(store: Store, value: Any, now: str | None = None) -> tuple[list[dict[str, Any]], int]:
@@ -267,9 +319,18 @@ def brief(store: Store, run_id: str) -> dict[str, Any]:
     matches.sort(key=lambda item: (not item[0], not item[1], -item[2].timestamp(), item[3]))
     return {
         "run": current,
+        "overdue_conditions": _overdue_conditions(current),
         "patterns": [public_pattern(item[4]) for item in matches[:5]],
-        "alerts": [],
+        "alerts": store.alerts_for_run(run_id),
     }
+
+
+def _overdue_conditions(run: dict[str, Any]) -> list[dict[str, str]]:
+    """Expose a read-only current timer diagnosis in status and brief."""
+
+    from .watch import due_conditions
+
+    return [condition.as_dict() for condition in due_conditions(run, utc_now())]
 
 
 def normalize_run_spec(value: Any) -> dict[str, Any]:

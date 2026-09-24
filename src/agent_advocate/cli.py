@@ -19,11 +19,13 @@ from .service import (
     public_observation,
     public_pattern,
     read_json_file,
+    revise_alert,
     set_pattern_disposition,
     start,
     status,
 )
 from .store import AdvocateError, RequestError, Store, resolve_data_dir
+from .watch import DEFAULT_INTERVAL_SECONDS, positive_interval, watch_foreground
 
 
 class JsonArgumentParser(argparse.ArgumentParser):
@@ -62,6 +64,22 @@ def build_parser() -> argparse.ArgumentParser:
     finish_parser.add_argument("run_id")
     finish_parser.add_argument("--outcome", required=True)
     finish_parser.add_argument("--summary", required=True)
+    alert_parser = commands.add_parser("alert", help="acknowledge, dismiss, or snooze an alert")
+    alert_parser.add_argument("alert_id")
+    alert_parser.add_argument("--action", required=True, choices=("acknowledge", "dismiss", "snooze"))
+    alert_parser.add_argument("--reason", required=True)
+    alert_parser.add_argument("--until", metavar="UTC")
+    watch_parser = commands.add_parser("watch", help="watch one run in the foreground")
+    watch_parser.add_argument("run_id")
+    watch_parser.add_argument(
+        "--interval",
+        type=positive_interval,
+        default=DEFAULT_INTERVAL_SECONDS,
+        metavar="SECONDS",
+        help="positive poll interval in seconds (default: 60)",
+    )
+    watch_parser.add_argument("--once", action="store_true", help="evaluate once and exit")
+    watch_parser.add_argument("--bell", action="store_true", help="ring the terminal bell for a new alert")
     return parser
 
 
@@ -120,6 +138,12 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
     if args.command == "finish":
         current, replay = finish(store, args.run_id, args.outcome, args.summary)
         return {"run": current, "idempotent": replay}
+    if args.command == "alert":
+        return {
+            "alert": revise_alert(
+                store, args.alert_id, args.action, args.reason, args.until
+            )
+        }
     raise RequestError("unknown command")
 
 
@@ -127,6 +151,16 @@ def main(argv: list[str] | None = None) -> int:
     parser = build_parser()
     try:
         args = parser.parse_args(argv)
+        if args.command == "watch":
+            store = Store(resolve_data_dir(args.data_dir))
+            watch_foreground(
+                store,
+                args.run_id,
+                args.interval,
+                once=args.once,
+                bell=args.bell,
+            )
+            return 0
         _emit(run(args))
         return 0
     except AdvocateError as error:
