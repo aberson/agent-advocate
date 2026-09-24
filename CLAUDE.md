@@ -13,7 +13,7 @@ Agent Advocate gives a coding coordinator an independent, evidence-based second 
 
 ## Commands
 
-This worktree includes the Step 1 CLI and private store. The watchdog command remains Step 3 work and must not be reported as available until that step lands.
+This worktree includes the private store, five project-local skills, and the foreground watchdog. The authored live acceptance procedure remains an operator M1 task; do not report host-skill behavior or M1 as demonstrated until it is actually observed in a fresh session.
 
 ```powershell
 uv sync --locked
@@ -43,7 +43,7 @@ Require meaningful behavior tests and a real short watchdog observation; do not 
 
 ## Current state
 
-Step 1 implements the local CLI, version-1 SQLite store, lifecycle records and focused runtime tests. The five skills, watchdog and live acceptance remain unimplemented here; no skill execution or live acceptance is claimed. Step status and completion evidence are owned by plan.md.
+The local CLI, version-1 SQLite store, five project-local skills and foreground watchdog are implemented here. The timer is deterministic and model-free; it persists/deduplicates alert conditions but never dispatches a skill or changes a monitored project. Live host skill execution and M1 acceptance remain unobserved. Step status and completion evidence are owned by plan.md.
 
 ## Environment requirements
 

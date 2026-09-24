@@ -17,6 +17,7 @@ import os
 from pathlib import Path
 import sqlite3
 from typing import Any
+import uuid
 
 
 SCHEMA_VERSION = 1
@@ -144,6 +145,11 @@ class Store:
                 )
                 if version == 0 and table_count == 0:
                     self._create_schema(conn)
+                elif version == SCHEMA_VERSION and _has_legacy_version_one_schema(conn):
+                    # Version 1 was released before its planned watchdog
+                    # projection existed.  This is the one bounded, additive
+                    # extension to that schema, not a general migration system.
+                    self._create_alert_schema(conn)
                 elif version != SCHEMA_VERSION or not _has_version_one_schema(conn):
                     raise StoreUnavailableError(
                         "unsupported store schema; preserve this directory and initialize a different --data-dir"
@@ -259,7 +265,26 @@ class Store:
                 updated_at TEXT NOT NULL
             )"""
         )
+        self._create_alert_schema(conn)
         conn.execute(f"PRAGMA user_version = {SCHEMA_VERSION}")
+
+    def _create_alert_schema(self, conn: sqlite3.Connection) -> None:
+        conn.execute(
+            """CREATE TABLE IF NOT EXISTS alerts (
+                alert_id TEXT PRIMARY KEY,
+                run_id TEXT NOT NULL REFERENCES runs(run_id) ON DELETE RESTRICT,
+                kind TEXT NOT NULL,
+                expectation_at TEXT NOT NULL,
+                first_seen_at TEXT NOT NULL,
+                last_seen_at TEXT NOT NULL,
+                disposition TEXT NOT NULL,
+                reason TEXT,
+                snoozed_until TEXT,
+                notified_at TEXT,
+                UNIQUE(run_id, kind, expectation_at)
+            )"""
+        )
+        conn.execute("CREATE INDEX IF NOT EXISTS alerts_run_seen ON alerts(run_id, last_seen_at)")
 
     @contextlib.contextmanager
     def transaction(self) -> Iterator[sqlite3.Connection]:
@@ -374,6 +399,27 @@ class Store:
             if payload["deadline_change"] != "preserve":
                 deadline_at = payload["deadline_change"]
             if _timestamp_not_before(timestamp, current["last_checkpoint_at"]):
+                # Pause retains an unchanged condition, but a new expectation
+                # replaces its old alert in this same checkpoint transaction.
+                self._resolve_alerts_for_expectation(
+                    conn,
+                    run_id,
+                    "checkpoint-overdue",
+                    payload["next_check_at"],
+                    timestamp,
+                    "checkpoint expectation replaced",
+                    resolve_other_expectations=True,
+                )
+                if deadline_at != current["deadline_at"]:
+                    self._resolve_alerts_for_expectation(
+                        conn,
+                        run_id,
+                        "deadline-overdue",
+                        deadline_at,
+                        timestamp,
+                        "deadline expectation replaced",
+                        resolve_other_expectations=True,
+                    )
                 conn.execute(
                     """UPDATE runs SET state = ?, last_checkpoint_at = ?, next_check_at = ?,
                        deadline_at = ? WHERE run_id = ?""",
@@ -457,7 +503,7 @@ class Store:
         return result
 
     def finish(
-        self, run_id: str, payload: dict[str, Any], now: str, event_id: str
+        self, run_id: str, payload: dict[str, Any], now: str | None, event_id: str
     ) -> tuple[dict[str, Any], bool]:
         """Finish a run, or return its current projection for an exact retry."""
 
@@ -475,19 +521,304 @@ class Store:
                         raise StoreUnavailableError("finished run projection is missing")
                     return current, True
                 raise ConflictError("run is already finished with a different outcome or summary")
+            timestamp = now or utc_now()
+            self._resolve_alerts_for_run(conn, run_id, timestamp, "run finished")
             conn.execute(
                 """UPDATE runs SET state = ?, outcome = ?, summary = ?,
                    last_checkpoint_at = ?, finish_json = ? WHERE run_id = ?""",
-                (FINISHED_RUN_STATE, payload["outcome"], payload["summary"], now, encoded, run_id),
+                (FINISHED_RUN_STATE, payload["outcome"], payload["summary"], timestamp, encoded, run_id),
             )
             conn.execute(
                 "INSERT INTO events (event_id, run_id, recorded_at, kind, payload_json) VALUES (?, ?, ?, 'finish', ?)",
-                (event_id, run_id, now, encoded),
+                (event_id, run_id, timestamp, encoded),
             )
             current = self.run(run_id, conn)
             if current is None:
                 raise StoreUnavailableError("finished run projection is missing")
             return current, False
+
+    def record_due_alerts(
+        self, run_id: str, conditions: list[dict[str, str]], now: str
+    ) -> tuple[dict[str, Any], list[dict[str, Any]]]:
+        """Persist due conditions and atomically claim normal notifications.
+
+        A unique condition row plus the immediate transaction means two
+        foreground watchers can both observe the same due run while only the
+        writer that creates (or reopens after snooze) gets a notification.
+        """
+
+        notifications: list[dict[str, Any]] = []
+        with self.transaction() as conn:
+            current = self.run(run_id, conn)
+            if current is None:
+                raise RequestError("unknown run_id")
+            if current["state"] in {"paused", FINISHED_RUN_STATE}:
+                return current, notifications
+            for condition in conditions:
+                kind = condition["kind"]
+                expectation_at = condition["expectation_at"]
+                if not self._condition_is_current_and_due(current, kind, expectation_at, now):
+                    continue
+                row = conn.execute(
+                    """SELECT * FROM alerts
+                       WHERE run_id = ? AND kind = ? AND expectation_at = ?""",
+                    (run_id, kind, expectation_at),
+                ).fetchone()
+                if row is None:
+                    alert = {
+                        "alert_id": str(uuid.uuid4()),
+                        "run_id": run_id,
+                        "kind": kind,
+                        "expectation_at": expectation_at,
+                        "first_seen_at": now,
+                        "last_seen_at": now,
+                        "disposition": "open",
+                        "reason": None,
+                        "snoozed_until": None,
+                        "notified_at": now,
+                    }
+                    conn.execute(
+                        """INSERT INTO alerts
+                           (alert_id, run_id, kind, expectation_at, first_seen_at,
+                            last_seen_at, disposition, reason, snoozed_until, notified_at)
+                           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                        tuple(alert[name] for name in (
+                            "alert_id", "run_id", "kind", "expectation_at", "first_seen_at",
+                            "last_seen_at", "disposition", "reason", "snoozed_until", "notified_at",
+                        )),
+                    )
+                    self._insert_alert_event(conn, run_id, now, "alert-open", alert)
+                    notifications.append(alert)
+                    continue
+
+                alert = _alert_from_row(row)
+                if (
+                    alert["disposition"] == "snoozed"
+                    and alert["snoozed_until"] is not None
+                    and _timestamp_not_before(now, alert["snoozed_until"])
+                ):
+                    alert.update(
+                        {
+                            "last_seen_at": now,
+                            "disposition": "open",
+                            "reason": None,
+                            "snoozed_until": None,
+                            "notified_at": now,
+                        }
+                    )
+                    conn.execute(
+                        """UPDATE alerts SET last_seen_at = ?, disposition = ?, reason = ?,
+                           snoozed_until = ?, notified_at = ? WHERE alert_id = ?""",
+                        (
+                            now,
+                            "open",
+                            None,
+                            None,
+                            now,
+                            alert["alert_id"],
+                        ),
+                    )
+                    self._insert_alert_event(conn, run_id, now, "alert-renotified", alert)
+                    notifications.append(alert)
+                else:
+                    if _timestamp_after(now, alert["last_seen_at"]):
+                        alert["last_seen_at"] = now
+                        conn.execute(
+                            "UPDATE alerts SET last_seen_at = ? WHERE alert_id = ?",
+                            (now, alert["alert_id"]),
+                        )
+                    # This poll is a heartbeat, not a new alert transition.
+                    # Keep the latest observation time without growing the
+                    # append-only event log on every unchanged poll.
+        return current, notifications
+
+    def revise_alert(
+        self,
+        alert_id: str,
+        action: str,
+        reason: str,
+        snoozed_until: str | None,
+        now: str | None,
+    ) -> dict[str, Any]:
+        """Persist a user disposition without deleting the alert history."""
+
+        with self.transaction() as conn:
+            timestamp = now or utc_now()
+            if action == "snooze" and (
+                snoozed_until is None or not _timestamp_after(snoozed_until, timestamp)
+            ):
+                raise RequestError("snoozed_until must be in the future")
+            row = conn.execute("SELECT * FROM alerts WHERE alert_id = ?", (alert_id,)).fetchone()
+            if row is None:
+                raise RequestError("unknown alert_id")
+            alert = _alert_from_row(row)
+            if alert["disposition"] in {"dismissed", "resolved"}:
+                raise RequestError("cannot change a dismissed or resolved alert")
+            if action == "acknowledge":
+                disposition = "acknowledged"
+                until = None
+            elif action == "dismiss":
+                disposition = "dismissed"
+                until = None
+            elif action == "snooze":
+                disposition = "snoozed"
+                until = snoozed_until
+            else:  # The service validates this; retain a store-side guard.
+                raise RequestError("alert action must be acknowledge, dismiss, or snooze")
+            alert.update(
+                {
+                    "last_seen_at": timestamp,
+                    "disposition": disposition,
+                    "reason": reason,
+                    "snoozed_until": until,
+                }
+            )
+            conn.execute(
+                """UPDATE alerts SET last_seen_at = ?, disposition = ?, reason = ?, snoozed_until = ?
+                   WHERE alert_id = ?""",
+                (timestamp, disposition, reason, until, alert_id),
+            )
+            self._insert_alert_event(conn, alert["run_id"], timestamp, f"alert-{action}", alert)
+            return alert
+
+    def alerts_for_run(self, run_id: str, unresolved_only: bool = True) -> list[dict[str, Any]]:
+        with self.read_connection() as conn:
+            query = "SELECT * FROM alerts WHERE run_id = ?"
+            parameters: tuple[Any, ...] = (run_id,)
+            if unresolved_only:
+                query += " AND disposition NOT IN ('dismissed', 'resolved')"
+            query += " ORDER BY first_seen_at, alert_id"
+            rows = conn.execute(query, parameters).fetchall()
+            return [_alert_from_row(row) for row in rows]
+
+    def state_segments_for_run(self, run_id: str, limit: int = 5) -> list[dict[str, str]]:
+        """Reconstruct recent recorded states from effective lifecycle events."""
+
+        with self.read_connection() as conn:
+            rows = conn.execute(
+                """SELECT kind, recorded_at, payload_json FROM events
+                   WHERE run_id = ? AND kind IN ('start', 'checkpoint', 'finish')
+                   ORDER BY rowid""",
+                (run_id,),
+            ).fetchall()
+        segments: list[dict[str, str]] = []
+        latest_effective_at = None
+        for row in rows:
+            recorded_at = parse_utc_timestamp(row["recorded_at"])
+            if row["kind"] == "start":
+                state = "active"
+            elif row["kind"] == "checkpoint":
+                if latest_effective_at is not None and recorded_at < latest_effective_at:
+                    continue
+                state = json_value(row["payload_json"])["state"]
+            else:
+                state = FINISHED_RUN_STATE
+            latest_effective_at = recorded_at
+            if not segments or segments[-1]["state"] != state:
+                segments.append({"state": state, "since": row["recorded_at"]})
+        return segments[-limit:]
+
+    @staticmethod
+    def _condition_is_current_and_due(
+        run: dict[str, Any], kind: str, expectation_at: str, now: str
+    ) -> bool:
+        if kind == "checkpoint-overdue":
+            current_expectation = run["next_check_at"]
+        elif kind == "deadline-overdue":
+            current_expectation = run["deadline_at"]
+        else:
+            return False
+        return (
+            current_expectation == expectation_at
+            and _timestamp_after(now, expectation_at)
+        )
+
+    def _resolve_alerts_for_expectation(
+        self,
+        conn: sqlite3.Connection,
+        run_id: str,
+        kind: str,
+        expectation_at: str | None,
+        now: str,
+        reason: str,
+        resolve_other_expectations: bool = False,
+    ) -> None:
+        if resolve_other_expectations:
+            if expectation_at is None:
+                rows = conn.execute(
+                    """SELECT * FROM alerts WHERE run_id = ? AND kind = ?
+                       AND disposition NOT IN ('dismissed', 'resolved')""",
+                    (run_id, kind),
+                ).fetchall()
+            else:
+                rows = conn.execute(
+                    """SELECT * FROM alerts WHERE run_id = ? AND kind = ? AND expectation_at != ?
+                       AND disposition NOT IN ('dismissed', 'resolved')""",
+                    (run_id, kind, expectation_at),
+                ).fetchall()
+        elif expectation_at is None:
+            return
+        else:
+            rows = conn.execute(
+                """SELECT * FROM alerts WHERE run_id = ? AND kind = ? AND expectation_at = ?
+                   AND disposition NOT IN ('dismissed', 'resolved')""",
+                (run_id, kind, expectation_at),
+            ).fetchall()
+        for row in rows:
+            alert = _alert_from_row(row)
+            alert.update(
+                {
+                    "last_seen_at": now,
+                    "disposition": "resolved",
+                    "reason": reason,
+                    "snoozed_until": None,
+                }
+            )
+            conn.execute(
+                """UPDATE alerts SET last_seen_at = ?, disposition = ?, reason = ?, snoozed_until = ?
+                   WHERE alert_id = ?""",
+                (now, "resolved", reason, None, alert["alert_id"]),
+            )
+            self._insert_alert_event(conn, run_id, now, "alert-resolved", alert)
+
+    def _resolve_alerts_for_run(
+        self, conn: sqlite3.Connection, run_id: str, now: str, reason: str
+    ) -> None:
+        rows = conn.execute(
+            """SELECT * FROM alerts WHERE run_id = ?
+               AND disposition NOT IN ('dismissed', 'resolved')""",
+            (run_id,),
+        ).fetchall()
+        for row in rows:
+            alert = _alert_from_row(row)
+            alert.update(
+                {
+                    "last_seen_at": now,
+                    "disposition": "resolved",
+                    "reason": reason,
+                    "snoozed_until": None,
+                }
+            )
+            conn.execute(
+                """UPDATE alerts SET last_seen_at = ?, disposition = ?, reason = ?, snoozed_until = ?
+                   WHERE alert_id = ?""",
+                (now, "resolved", reason, None, alert["alert_id"]),
+            )
+            self._insert_alert_event(conn, run_id, now, "alert-resolved", alert)
+
+    @staticmethod
+    def _insert_alert_event(
+        conn: sqlite3.Connection,
+        run_id: str,
+        now: str,
+        kind: str,
+        alert: dict[str, Any],
+    ) -> None:
+        conn.execute(
+            """INSERT INTO events (event_id, run_id, recorded_at, kind, payload_json)
+               VALUES (?, ?, ?, ?, ?)""",
+            (str(uuid.uuid4()), run_id, now, kind, json_text(alert)),
+        )
 
     def observations_for_run(self, run_id: str) -> list[dict[str, Any]]:
         with self.read_connection() as conn:
@@ -677,6 +1008,21 @@ def _run_from_row(row: sqlite3.Row) -> dict[str, Any]:
     }
 
 
+def _alert_from_row(row: sqlite3.Row) -> dict[str, Any]:
+    return {
+        "alert_id": row["alert_id"],
+        "run_id": row["run_id"],
+        "kind": row["kind"],
+        "expectation_at": row["expectation_at"],
+        "first_seen_at": row["first_seen_at"],
+        "last_seen_at": row["last_seen_at"],
+        "disposition": row["disposition"],
+        "reason": row["reason"],
+        "snoozed_until": row["snoozed_until"],
+        "notified_at": row["notified_at"],
+    }
+
+
 def _pattern_equivalent(stored: dict[str, Any], candidate: dict[str, Any]) -> bool:
     """Ignore helper timestamps when deciding whether an import is a replay."""
 
@@ -688,6 +1034,11 @@ def _pattern_equivalent(stored: dict[str, Any], candidate: dict[str, Any]) -> bo
 
 
 def _has_version_one_schema(conn: sqlite3.Connection) -> bool:
+    rows = conn.execute("SELECT name FROM sqlite_master WHERE type = 'table'").fetchall()
+    return {row[0] for row in rows} == {"runs", "events", "observations", "patterns", "alerts"}
+
+
+def _has_legacy_version_one_schema(conn: sqlite3.Connection) -> bool:
     rows = conn.execute("SELECT name FROM sqlite_master WHERE type = 'table'").fetchall()
     return {row[0] for row in rows} == {"runs", "events", "observations", "patterns"}
 
